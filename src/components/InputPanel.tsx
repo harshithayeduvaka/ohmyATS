@@ -56,7 +56,7 @@ const InputPanel = ({ onScan, isScanning }: InputPanelProps) => {
     setMode("text");
   };
 
-  const isReady = cv.trim() && jd.trim() && !isScanning;
+  const isReady = cv.trim() && !isScanning;
 
   return (
     <div className="flex flex-col h-full p-6 gap-5">

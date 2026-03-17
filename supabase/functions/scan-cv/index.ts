@@ -95,7 +95,9 @@ serve(async (req) => {
           { role: "system", content: SYSTEM_PROMPT },
           {
             role: "user",
-            content: `## CV:\n${cv}\n\n## Target Job Description:\n${jd}`,
+            content: jd
+              ? `## CV:\n${cv}\n\n## Target Job Description:\n${jd}`
+              : `## CV:\n${cv}\n\n## Target Job Description:\nNo specific job description provided. Perform a general ATS compatibility scan — evaluate formatting, keyword strength, impact clarity, and overall recruiter appeal as a standalone CV review.`,
           },
         ],
       }),
