@@ -1,8 +1,9 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, Briefcase, Zap, Upload, X } from "lucide-react";
+import { FileText, Briefcase, Zap, Upload, X, Loader2 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import { extractTextFromPdf } from "@/lib/pdfParser";
 
 interface InputPanelProps {
   onScan: (cv: string, jd: string) => void;
@@ -16,6 +17,7 @@ const InputPanel = ({ onScan, isScanning }: InputPanelProps) => {
   const [jdFile, setJdFile] = useState<File | null>(null);
   const [cvMode, setCvMode] = useState<"text" | "file">("text");
   const [jdMode, setJdMode] = useState<"text" | "file">("text");
+  const [parsing, setParsing] = useState(false);
   const cvFileRef = useRef<HTMLInputElement>(null);
   const jdFileRef = useRef<HTMLInputElement>(null);
 
@@ -26,18 +28,21 @@ const InputPanel = ({ onScan, isScanning }: InputPanelProps) => {
   ) => {
     if (!file) return;
     setFile(file);
+    setParsing(true);
 
-    if (file.type === "text/plain" || file.name.endsWith(".txt")) {
-      const text = await file.text();
-      setText(text);
-    } else if (file.type === "application/pdf") {
-      // For PDF, we read as text (basic extraction)
-      // A more robust solution would use a PDF parsing library
-      const text = await file.text();
-      setText(`[PDF uploaded: ${file.name}]\n\n${text}`);
-    } else {
-      const text = await file.text();
-      setText(text);
+    try {
+      if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
+        const text = await extractTextFromPdf(file);
+        setText(text);
+      } else {
+        const text = await file.text();
+        setText(text);
+      }
+    } catch (err) {
+      console.error("File parsing error:", err);
+      setText(`[Failed to parse ${file.name}. Try pasting the text instead.]`);
+    } finally {
+      setParsing(false);
     }
   };
 
@@ -104,18 +109,26 @@ const InputPanel = ({ onScan, isScanning }: InputPanelProps) => {
             />
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-md bg-card min-h-[180px]">
-              {cvFile ? (
-                <div className="flex items-center gap-2 text-sm text-foreground">
-                  <FileText className="w-4 h-4 text-accent" />
-                  <span className="truncate max-w-[200px]">{cvFile.name}</span>
-                  <button onClick={() => clearFile(setCvFile, setCv, setCvMode)}>
-                    <X className="w-4 h-4 text-muted-foreground hover:text-destructive" />
-                  </button>
+              {parsing ? (
+                <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="w-6 h-6 animate-spin text-technical" />
+                  <span>Extracting text from PDF...</span>
+                </div>
+              ) : cvFile ? (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-2 text-sm text-foreground">
+                    <FileText className="w-4 h-4 text-accent" />
+                    <span className="truncate max-w-[200px]">{cvFile.name}</span>
+                    <button onClick={() => clearFile(setCvFile, setCv, setCvMode)}>
+                      <X className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                    </button>
+                  </div>
+                  {cv && <p className="text-[10px] text-accent">✓ {cv.split(/\s+/).length} words extracted</p>}
                 </div>
               ) : (
                 <>
                   <Upload className="w-8 h-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground mb-2">Drop PDF or TXT file</p>
+                  <p className="text-sm text-muted-foreground mb-2">Upload PDF, TXT, or DOCX</p>
                   <Button
                     variant="outline"
                     size="sm"
@@ -172,18 +185,26 @@ const InputPanel = ({ onScan, isScanning }: InputPanelProps) => {
             />
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-md bg-card min-h-[180px]">
-              {jdFile ? (
-                <div className="flex items-center gap-2 text-sm text-foreground">
-                  <FileText className="w-4 h-4 text-accent" />
-                  <span className="truncate max-w-[200px]">{jdFile.name}</span>
-                  <button onClick={() => clearFile(setJdFile, setJd, setJdMode)}>
-                    <X className="w-4 h-4 text-muted-foreground hover:text-destructive" />
-                  </button>
+              {parsing ? (
+                <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="w-6 h-6 animate-spin text-technical" />
+                  <span>Extracting text from PDF...</span>
+                </div>
+              ) : jdFile ? (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-2 text-sm text-foreground">
+                    <FileText className="w-4 h-4 text-accent" />
+                    <span className="truncate max-w-[200px]">{jdFile.name}</span>
+                    <button onClick={() => clearFile(setJdFile, setJd, setJdMode)}>
+                      <X className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                    </button>
+                  </div>
+                  {jd && <p className="text-[10px] text-accent">✓ {jd.split(/\s+/).length} words extracted</p>}
                 </div>
               ) : (
                 <>
                   <Upload className="w-8 h-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground mb-2">Drop PDF or TXT file</p>
+                  <p className="text-sm text-muted-foreground mb-2">Upload PDF, TXT, or DOCX</p>
                   <Button
                     variant="outline"
                     size="sm"
