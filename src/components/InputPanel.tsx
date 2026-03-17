@@ -109,18 +109,26 @@ const InputPanel = ({ onScan, isScanning }: InputPanelProps) => {
             />
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-md bg-card min-h-[180px]">
-              {cvFile ? (
-                <div className="flex items-center gap-2 text-sm text-foreground">
-                  <FileText className="w-4 h-4 text-accent" />
-                  <span className="truncate max-w-[200px]">{cvFile.name}</span>
-                  <button onClick={() => clearFile(setCvFile, setCv, setCvMode)}>
-                    <X className="w-4 h-4 text-muted-foreground hover:text-destructive" />
-                  </button>
+              {parsing ? (
+                <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="w-6 h-6 animate-spin text-technical" />
+                  <span>Extracting text from PDF...</span>
+                </div>
+              ) : cvFile ? (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-2 text-sm text-foreground">
+                    <FileText className="w-4 h-4 text-accent" />
+                    <span className="truncate max-w-[200px]">{cvFile.name}</span>
+                    <button onClick={() => clearFile(setCvFile, setCv, setCvMode)}>
+                      <X className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                    </button>
+                  </div>
+                  {cv && <p className="text-[10px] text-accent">✓ {cv.split(/\s+/).length} words extracted</p>}
                 </div>
               ) : (
                 <>
                   <Upload className="w-8 h-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground mb-2">Drop PDF or TXT file</p>
+                  <p className="text-sm text-muted-foreground mb-2">Upload PDF, TXT, or DOCX</p>
                   <Button
                     variant="outline"
                     size="sm"
