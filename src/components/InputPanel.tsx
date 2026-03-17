@@ -17,6 +17,7 @@ const InputPanel = ({ onScan, isScanning }: InputPanelProps) => {
   const [jdFile, setJdFile] = useState<File | null>(null);
   const [cvMode, setCvMode] = useState<"text" | "file">("text");
   const [jdMode, setJdMode] = useState<"text" | "file">("text");
+  const [parsing, setParsing] = useState(false);
   const cvFileRef = useRef<HTMLInputElement>(null);
   const jdFileRef = useRef<HTMLInputElement>(null);
 
@@ -27,18 +28,21 @@ const InputPanel = ({ onScan, isScanning }: InputPanelProps) => {
   ) => {
     if (!file) return;
     setFile(file);
+    setParsing(true);
 
-    if (file.type === "text/plain" || file.name.endsWith(".txt")) {
-      const text = await file.text();
-      setText(text);
-    } else if (file.type === "application/pdf") {
-      // For PDF, we read as text (basic extraction)
-      // A more robust solution would use a PDF parsing library
-      const text = await file.text();
-      setText(`[PDF uploaded: ${file.name}]\n\n${text}`);
-    } else {
-      const text = await file.text();
-      setText(text);
+    try {
+      if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
+        const text = await extractTextFromPdf(file);
+        setText(text);
+      } else {
+        const text = await file.text();
+        setText(text);
+      }
+    } catch (err) {
+      console.error("File parsing error:", err);
+      setText(`[Failed to parse ${file.name}. Try pasting the text instead.]`);
+    } finally {
+      setParsing(false);
     }
   };
 
