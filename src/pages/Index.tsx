@@ -3,7 +3,8 @@ import InputPanel from "@/components/InputPanel";
 import ScanningState from "@/components/ScanningState";
 import ResultsFeed from "@/components/ResultsFeed";
 import { ScanResult } from "@/lib/types";
-import { mockScanResult } from "@/lib/mockScanResult";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 type AppState = "input" | "scanning" | "results";
 
@@ -11,33 +12,70 @@ const Index = () => {
   const [state, setState] = useState<AppState>("input");
   const [scanStep, setScanStep] = useState(0);
   const [result, setResult] = useState<ScanResult | null>(null);
+  const { toast } = useToast();
 
-  const handleScan = useCallback((_cv: string, _jd: string) => {
+  const handleScan = useCallback(async (cv: string, jd: string) => {
     setState("scanning");
     setScanStep(0);
-  }, []);
+
+    // Start the step animation
+    const stepInterval = setInterval(() => {
+      setScanStep((s) => {
+        if (s >= 7) {
+          clearInterval(stepInterval);
+          return 7;
+        }
+        return s + 1;
+      });
+    }, 800);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("scan-cv", {
+        body: { cv, jd },
+      });
+
+      clearInterval(stepInterval);
+
+      if (error) {
+        throw new Error(error.message || "Scan failed");
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      // Ensure we have all required fields with defaults
+      const scanResult: ScanResult = {
+        botPass: data.botPass || { formatIssues: [], extractedFields: [] },
+        algorithm: data.algorithm || { hardRequirements: [], softSkills: [], phantomMatches: [] },
+        humanPass: data.humanPass || { overallImpression: "", strengths: [], weaknesses: [], weakVerbs: [] },
+        rewrites: data.rewrites || [],
+        scores: data.scores || { overall: 0, atsCompatibility: 0, keywordMatch: 0, recruiterAppeal: 0, impactClarity: 0, formatScore: 0 },
+        keywordAnalysis: data.keywordAnalysis || [],
+      };
+
+      setScanStep(8);
+      setTimeout(() => {
+        setResult(scanResult);
+        setState("results");
+      }, 500);
+    } catch (err: any) {
+      clearInterval(stepInterval);
+      console.error("Scan error:", err);
+      toast({
+        title: "Scan Failed",
+        description: err.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+      setState("input");
+    }
+  }, [toast]);
 
   const handleReset = useCallback(() => {
     setState("input");
     setResult(null);
     setScanStep(0);
   }, []);
-
-  useEffect(() => {
-    if (state !== "scanning") return;
-
-    const totalSteps = 8;
-    if (scanStep < totalSteps) {
-      const timer = setTimeout(() => setScanStep((s) => s + 1), 400);
-      return () => clearTimeout(timer);
-    } else {
-      const timer = setTimeout(() => {
-        setResult(mockScanResult);
-        setState("results");
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [state, scanStep]);
 
   return (
     <div className="flex h-screen bg-background">
@@ -56,7 +94,7 @@ const Index = () => {
               </div>
               <h2 className="text-lg font-semibold text-foreground">Ready to Scan</h2>
               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                Paste your CV and target Job Description on the left, then initiate the dual ATS/Recruiter scan. You'll receive a full parsing check, semantic analysis, recruiter evaluation, and actionable rewrites.
+                Paste your CV and target Job Description on the left, then initiate the AI-powered dual ATS/Recruiter scan. You'll receive real semantic analysis, recruiter evaluation, and actionable rewrites.
               </p>
             </div>
           </div>
