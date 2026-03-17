@@ -71,9 +71,9 @@ serve(async (req) => {
   try {
     const { cv, jd } = await req.json();
 
-    if (!cv || !jd) {
+    if (!cv) {
       return new Response(
-        JSON.stringify({ error: "Both CV and Job Description are required" }),
+        JSON.stringify({ error: "CV is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
