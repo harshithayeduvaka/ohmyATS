@@ -22,9 +22,27 @@ export interface RewriteExample {
   after: string;
 }
 
+export interface ScoreData {
+  overall: number;
+  atsCompatibility: number;
+  keywordMatch: number;
+  recruiterAppeal: number;
+  impactClarity: number;
+  formatScore: number;
+}
+
+export interface KeywordAnalysisItem {
+  keyword: string;
+  foundInCV: boolean;
+  importance: "critical" | "high" | "medium" | "low";
+  context: string;
+}
+
 export interface ScanResult {
   botPass: BotPassData;
   algorithm: AlgorithmData;
   humanPass: HumanPassData;
   rewrites: RewriteExample[];
+  scores: ScoreData;
+  keywordAnalysis: KeywordAnalysisItem[];
 }
