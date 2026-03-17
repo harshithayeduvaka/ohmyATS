@@ -1,8 +1,9 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, Briefcase, Zap, Upload, X } from "lucide-react";
+import { FileText, Briefcase, Zap, Upload, X, Loader2 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import { extractTextFromPdf } from "@/lib/pdfParser";
 
 interface InputPanelProps {
   onScan: (cv: string, jd: string) => void;
