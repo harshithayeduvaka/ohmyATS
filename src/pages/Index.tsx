@@ -17,6 +17,7 @@ type AppState = "input" | "scanning" | "results";
 type RightView = "results" | "history";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [state, setState] = useState<AppState>("input");
   const [scanStep, setScanStep] = useState(0);
   const [result, setResult] = useState<ScanResult | null>(null);
