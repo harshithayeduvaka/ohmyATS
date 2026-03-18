@@ -149,6 +149,9 @@ const Index = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="gap-1.5">
+              <ArrowLeft className="w-4 h-4" /> Home
+            </Button>
             {state === "results" && (
               <button
                 onClick={handleReset}
