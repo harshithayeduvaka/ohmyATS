@@ -5,7 +5,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import Dashboard from "./pages/Dashboard.tsx";
 import Index from "./pages/Index.tsx";
+import CoverLetter from "./pages/CoverLetter.tsx";
+import InterviewSimulator from "./pages/InterviewSimulator.tsx";
+import InterviewQA from "./pages/InterviewQA.tsx";
+import ResumeVersions from "./pages/ResumeVersions.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -19,7 +24,12 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/scan" element={<Index />} />
+              <Route path="/cover-letter" element={<CoverLetter />} />
+              <Route path="/interview" element={<InterviewSimulator />} />
+              <Route path="/interview-qa" element={<InterviewQA />} />
+              <Route path="/versions" element={<ResumeVersions />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
