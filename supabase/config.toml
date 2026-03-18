@@ -2,3 +2,12 @@ project_id = "znznuxpvoehdgdrnzahw"
 
 [functions.scan-cv]
 verify_jwt = false
+
+[functions.generate-cover-letter]
+verify_jwt = false
+
+[functions.interview-questions]
+verify_jwt = false
+
+[functions.evaluate-answer]
+verify_jwt = false

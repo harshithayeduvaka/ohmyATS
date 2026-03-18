@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import InputPanel from "@/components/InputPanel";
 import ScanningState from "@/components/ScanningState";
 import ResultsFeed from "@/components/ResultsFeed";
@@ -8,7 +9,7 @@ import { ScanResult } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Download, History, LayoutDashboard } from "lucide-react";
+import { Download, History, LayoutDashboard, ArrowLeft } from "lucide-react";
 import { generatePdfReport } from "@/lib/pdfReport";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +17,7 @@ type AppState = "input" | "scanning" | "results";
 type RightView = "results" | "history";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [state, setState] = useState<AppState>("input");
   const [scanStep, setScanStep] = useState(0);
   const [result, setResult] = useState<ScanResult | null>(null);
@@ -147,6 +149,9 @@ const Index = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="gap-1.5">
+              <ArrowLeft className="w-4 h-4" /> Home
+            </Button>
             {state === "results" && (
               <button
                 onClick={handleReset}
