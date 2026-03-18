@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      resume_versions: {
+        Row: {
+          created_at: string
+          cv_text: string
+          id: string
+          jd_text: string | null
+          overall_score: number | null
+          scan_result: Json | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          cv_text: string
+          id?: string
+          jd_text?: string | null
+          overall_score?: number | null
+          scan_result?: Json | null
+          title?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          cv_text?: string
+          id?: string
+          jd_text?: string | null
+          overall_score?: number | null
+          scan_result?: Json | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       scan_history: {
         Row: {
           created_at: string
