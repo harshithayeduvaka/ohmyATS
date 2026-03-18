@@ -6,46 +6,32 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `You are a hybrid of a Senior ATS Software Engineer (expert in parsing/ranking algorithms of modern ATS platforms like Workday, Taleo, Greenhouse) and a Senior Executive Recruiter specializing in International Marketing and Business Development.
+const SYSTEM_PROMPT = `You are a production ATS engine (Workday/Bullhorn/Greenhouse caliber) combined with a brutally honest senior recruiter. Simulate EXACTLY how real ATS software parses and ranks resumes.
 
-You will receive a CV and a target Job Description. Run a deep, realistic ATS scan and recruiter evaluation.
+SCORING RULES — BE HARSH LIKE REAL ATS:
+- Most CVs score 30-55. Only exceptional, perfectly optimized CVs score 70+.
+- A score of 80+ means the CV would pass top-tier enterprise ATS filters — extremely rare.
+- Deduct heavily for: missing quantified results, generic buzzwords without context, format issues, keyword gaps vs JD.
+- Do NOT inflate scores to be encouraging. Real ATS systems reject 75% of applicants.
 
-STRICT RULES:
-- No generic, cookie-cutter feedback
-- Use semantic analysis (understand context, not just exact keyword matches)
-- Keep the CV attractive to human recruiters, not robotic
-
-You MUST respond with a valid JSON object matching this exact structure (no markdown, no code blocks, just raw JSON):
-
+Respond with ONLY valid JSON (no markdown, no code blocks):
 {
   "botPass": {
-    "formatIssues": ["string array of formatting issues that would cause ATS to scramble data"],
-    "extractedFields": [
-      {"label": "string field name", "value": "string extracted value", "status": "ok|warning|error"}
-    ]
+    "formatIssues": ["issues that would cause ATS parsing failures"],
+    "extractedFields": [{"label":"field","value":"extracted","status":"ok|warning|error"}]
   },
   "algorithm": {
-    "hardRequirements": [
-      {"skill": "string", "status": "matched|missing|weak", "context": "optional explanation"}
-    ],
-    "softSkills": [
-      {"skill": "string", "status": "matched|missing"}
-    ],
-    "phantomMatches": [
-      {"keyword": "string keyword used but ranked low", "reason": "why ATS would rank it low"}
-    ]
+    "hardRequirements": [{"skill":"skill","status":"matched|missing|weak","context":"why"}],
+    "softSkills": [{"skill":"skill","status":"matched|missing"}],
+    "phantomMatches": [{"keyword":"keyword","reason":"why ATS ranks it low"}]
   },
   "humanPass": {
-    "overallImpression": "string - recruiter's overall impression",
-    "strengths": ["string array"],
-    "weaknesses": ["string array"],
-    "weakVerbs": [
-      {"original": "weak verb/phrase used", "suggestion": "stronger replacement"}
-    ]
+    "overallImpression": "brutally honest recruiter take",
+    "strengths": ["strengths"],
+    "weaknesses": ["weaknesses - be specific and actionable"],
+    "weakVerbs": [{"original":"weak phrase","suggestion":"stronger replacement"}]
   },
-  "rewrites": [
-    {"context": "which bullet/section", "before": "original text", "after": "rewritten using Action + Context + Quantifiable Result"}
-  ],
+  "rewrites": [{"context":"section","before":"original","after":"rewritten with Action + Context + Quantifiable Result"}],
   "scores": {
     "overall": 0-100,
     "atsCompatibility": 0-100,
@@ -54,14 +40,10 @@ You MUST respond with a valid JSON object matching this exact structure (no mark
     "impactClarity": 0-100,
     "formatScore": 0-100
   },
-  "keywordAnalysis": [
-    {"keyword": "string", "foundInCV": true/false, "importance": "critical|high|medium|low", "context": "where found or suggestion where to add"}
-  ]
+  "keywordAnalysis": [{"keyword":"keyword","foundInCV": true,"importance":"critical|high|medium|low","context":"where found or where to add"}]
 }
 
-Provide 3-4 rewrites using the "Action + Context + Quantifiable Result" framework tailored to Business Development and Marketing.
-Include at least 8-12 keyword analysis entries.
-Be thorough, specific, and actionable.`;
+Give 3-4 rewrites, 8-12 keyword entries. Be specific, not generic.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -83,6 +65,14 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    // 90-second timeout
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 90000);
+
+    const userContent = jd
+      ? `CV:\n${cv}\n\nTarget JD:\n${jd}`
+      : `CV:\n${cv}\n\nNo JD provided. Run a general ATS compatibility scan — evaluate formatting, keyword strength, impact clarity, and recruiter appeal as a standalone review.`;
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -93,15 +83,14 @@ serve(async (req) => {
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
-          {
-            role: "user",
-            content: jd
-              ? `## CV:\n${cv}\n\n## Target Job Description:\n${jd}`
-              : `## CV:\n${cv}\n\n## Target Job Description:\nNo specific job description provided. Perform a general ATS compatibility scan — evaluate formatting, keyword strength, impact clarity, and overall recruiter appeal as a standalone CV review.`,
-          },
+          { role: "user", content: userContent },
         ],
+        temperature: 0.3,
       }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeout);
 
     if (!response.ok) {
       if (response.status === 429) {
@@ -128,15 +117,13 @@ serve(async (req) => {
       throw new Error("No content in AI response");
     }
 
-    // Parse the JSON from the AI response
     let parsed;
     try {
-      // Try to extract JSON from potential markdown code blocks
       const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
       const jsonStr = jsonMatch ? jsonMatch[1].trim() : content.trim();
       parsed = JSON.parse(jsonStr);
     } catch (e) {
-      console.error("Failed to parse AI response as JSON:", content);
+      console.error("Failed to parse AI response:", content.substring(0, 500));
       throw new Error("Failed to parse AI analysis result");
     }
 
@@ -144,6 +131,12 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      return new Response(
+        JSON.stringify({ error: "Scan timed out. Please try with a shorter CV or try again." }),
+        { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     console.error("scan-cv error:", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
