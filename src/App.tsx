@@ -11,6 +11,10 @@ import CoverLetter from "./pages/CoverLetter.tsx";
 import InterviewSimulator from "./pages/InterviewSimulator.tsx";
 import InterviewQA from "./pages/InterviewQA.tsx";
 import ResumeVersions from "./pages/ResumeVersions.tsx";
+import JDOptimizer from "./pages/JDOptimizer.tsx";
+import KeywordAnalyzer from "./pages/KeywordAnalyzer.tsx";
+import ColdOutreach from "./pages/ColdOutreach.tsx";
+import LinkedInAnalyzer from "./pages/LinkedInAnalyzer.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
