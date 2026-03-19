@@ -44,6 +44,38 @@ const tools = [
     color: "text-primary",
     bgColor: "bg-primary/10",
   },
+  {
+    title: "JD Optimizer",
+    description: "Paste a job description and get it optimized for ATS screening with hidden requirement analysis.",
+    icon: FileSearch,
+    href: "/jd-optimizer",
+    color: "text-technical",
+    bgColor: "bg-technical/10",
+  },
+  {
+    title: "Keyword Analyzer",
+    description: "Extract and categorize all ATS keywords from any job description. Copy them into your CV.",
+    icon: Search,
+    href: "/keywords",
+    color: "text-accent",
+    bgColor: "bg-accent/10",
+  },
+  {
+    title: "Cold Outreach Generator",
+    description: "Generate personalized cold emails & LinkedIn messages to hiring managers and recruiters.",
+    icon: Mail,
+    href: "/cold-outreach",
+    color: "text-warning",
+    bgColor: "bg-warning/10",
+  },
+  {
+    title: "LinkedIn Coach",
+    description: "Get your LinkedIn profile analyzed, scored, and optimized with content strategy & SSI coaching.",
+    icon: Linkedin,
+    href: "/linkedin",
+    color: "text-primary",
+    bgColor: "bg-primary/10",
+  },
 ];
 
 const Dashboard = () => {

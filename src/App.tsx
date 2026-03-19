@@ -34,6 +34,10 @@ const App = () => (
               <Route path="/interview" element={<InterviewSimulator />} />
               <Route path="/interview-qa" element={<InterviewQA />} />
               <Route path="/versions" element={<ResumeVersions />} />
+              <Route path="/jd-optimizer" element={<JDOptimizer />} />
+              <Route path="/keywords" element={<KeywordAnalyzer />} />
+              <Route path="/cold-outreach" element={<ColdOutreach />} />
+              <Route path="/linkedin" element={<LinkedInAnalyzer />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
