@@ -11,6 +11,10 @@ import CoverLetter from "./pages/CoverLetter.tsx";
 import InterviewSimulator from "./pages/InterviewSimulator.tsx";
 import InterviewQA from "./pages/InterviewQA.tsx";
 import ResumeVersions from "./pages/ResumeVersions.tsx";
+import JDOptimizer from "./pages/JDOptimizer.tsx";
+import KeywordAnalyzer from "./pages/KeywordAnalyzer.tsx";
+import ColdOutreach from "./pages/ColdOutreach.tsx";
+import LinkedInAnalyzer from "./pages/LinkedInAnalyzer.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -30,6 +34,10 @@ const App = () => (
               <Route path="/interview" element={<InterviewSimulator />} />
               <Route path="/interview-qa" element={<InterviewQA />} />
               <Route path="/versions" element={<ResumeVersions />} />
+              <Route path="/jd-optimizer" element={<JDOptimizer />} />
+              <Route path="/keywords" element={<KeywordAnalyzer />} />
+              <Route path="/cold-outreach" element={<ColdOutreach />} />
+              <Route path="/linkedin" element={<LinkedInAnalyzer />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
