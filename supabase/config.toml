@@ -11,3 +11,15 @@ verify_jwt = false
 
 [functions.evaluate-answer]
 verify_jwt = false
+
+[functions.optimize-jd]
+verify_jwt = false
+
+[functions.extract-keywords]
+verify_jwt = false
+
+[functions.generate-cold-outreach]
+verify_jwt = false
+
+[functions.analyze-linkedin]
+verify_jwt = false
