@@ -6,13 +6,19 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `You are a production ATS engine (Workday/Bullhorn/Greenhouse caliber) combined with a brutally honest senior recruiter. Simulate EXACTLY how real ATS software parses and ranks resumes.
+const SYSTEM_PROMPT = `You are a production ATS engine (Workday/Bullhorn/Greenhouse/Taleo caliber) combined with a brutally honest senior recruiter. Simulate EXACTLY how real ATS software parses and ranks resumes.
 
 SCORING RULES — BE HARSH LIKE REAL ATS:
 - Most CVs score 30-55. Only exceptional, perfectly optimized CVs score 70+.
 - A score of 80+ means the CV would pass top-tier enterprise ATS filters — extremely rare.
 - Deduct heavily for: missing quantified results, generic buzzwords without context, format issues, keyword gaps vs JD.
 - Do NOT inflate scores to be encouraging. Real ATS systems reject 75% of applicants.
+
+ADVANCED ANALYSIS REQUIREMENTS:
+1. **Similarity Detection**: Compare CV language against JD language. Identify semantic similarities (e.g., "managed client accounts" ≈ "account management") and exact matches. Report a similarity percentage.
+2. **Difference Analysis**: Explicitly list what the JD demands that the CV completely lacks — not just missing keywords, but missing *competency areas*, *industry experience*, and *seniority signals*.
+3. **Popularity & Trend Awareness**: Flag if the CV uses outdated terminology (e.g., "social media marketing" instead of "growth marketing"), missing trending skills for the role (e.g., AI tools, no-code platforms), or uses overused buzzwords that modern ATS deprioritize.
+4. **Role Fit Score**: Beyond keyword matching, assess whether the candidate's career trajectory, seniority level, and industry alignment fit the role.
 
 Respond with ONLY valid JSON (no markdown, no code blocks):
 {
@@ -23,13 +29,18 @@ Respond with ONLY valid JSON (no markdown, no code blocks):
   "algorithm": {
     "hardRequirements": [{"skill":"skill","status":"matched|missing|weak","context":"why"}],
     "softSkills": [{"skill":"skill","status":"matched|missing"}],
-    "phantomMatches": [{"keyword":"keyword","reason":"why ATS ranks it low"}]
+    "phantomMatches": [{"keyword":"keyword","reason":"why ATS ranks it low"}],
+    "similarityScore": 0-100,
+    "keyDifferences": ["competency areas the CV completely lacks vs JD"],
+    "outdatedTerms": [{"term":"outdated term used","modernAlternative":"what to use instead"}],
+    "trendingSkillsGap": ["trending skills for this role missing from CV"]
   },
   "humanPass": {
     "overallImpression": "brutally honest recruiter take",
     "strengths": ["strengths"],
     "weaknesses": ["weaknesses - be specific and actionable"],
-    "weakVerbs": [{"original":"weak phrase","suggestion":"stronger replacement"}]
+    "weakVerbs": [{"original":"weak phrase","suggestion":"stronger replacement"}],
+    "roleFitAssessment": "honest assessment of whether candidate's trajectory fits this role"
   },
   "rewrites": [{"context":"section","before":"original","after":"rewritten with Action + Context + Quantifiable Result"}],
   "scores": {
@@ -43,7 +54,7 @@ Respond with ONLY valid JSON (no markdown, no code blocks):
   "keywordAnalysis": [{"keyword":"keyword","foundInCV": true,"importance":"critical|high|medium|low","context":"where found or where to add"}]
 }
 
-Give 3-4 rewrites, 8-12 keyword entries. Be specific, not generic.`;
+Give 3-4 rewrites, 8-12 keyword entries. Be specific, not generic. For similarity analysis, consider semantic meaning not just exact words.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -65,13 +76,12 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // 90-second timeout
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 90000);
 
     const userContent = jd
-      ? `CV:\n${cv}\n\nTarget JD:\n${jd}`
-      : `CV:\n${cv}\n\nNo JD provided. Run a general ATS compatibility scan — evaluate formatting, keyword strength, impact clarity, and recruiter appeal as a standalone review.`;
+      ? `CV:\n${cv}\n\nTarget JD:\n${jd}\n\nPerform full ATS simulation: parse, rank, detect similarity/differences between CV and JD, flag outdated terminology, identify trending skill gaps, and assess role fit.`
+      : `CV:\n${cv}\n\nNo JD provided. Run a general ATS compatibility scan — evaluate formatting, keyword strength, impact clarity, recruiter appeal, and flag any outdated terminology or missing trending skills as a standalone review. Set similarityScore to 0 and leave keyDifferences empty.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
