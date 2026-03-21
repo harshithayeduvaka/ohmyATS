@@ -18,6 +18,7 @@ export interface HumanPassData {
   strengths: string[];
   weaknesses: string[];
   weakVerbs: { original: string; suggestion: string }[];
+  roleFitAssessment?: string;
 }
 
 export interface RewriteExample {
