@@ -194,7 +194,7 @@ const Index = () => {
 
         {state === "results" && result && rightView === "results" && (
           <div className="flex-1 min-h-0 overflow-hidden">
-            <ResultsFeed result={result} />
+            <ResultsFeed result={result} cv={lastCv} jd={lastJd} />
           </div>
         )}
       </div>
