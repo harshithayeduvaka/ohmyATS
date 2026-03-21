@@ -14,6 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
+      job_applications: {
+        Row: {
+          applied_date: string | null
+          category: string | null
+          company: string
+          connection_sent_date: string | null
+          contact_email: string | null
+          contact_linkedin: string | null
+          contact_name: string | null
+          contact_role: string | null
+          created_at: string
+          id: string
+          jd_link: string | null
+          job_type: string | null
+          linkedin_message: string | null
+          location: string | null
+          notes: string | null
+          role_title: string
+          source: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          applied_date?: string | null
+          category?: string | null
+          company?: string
+          connection_sent_date?: string | null
+          contact_email?: string | null
+          contact_linkedin?: string | null
+          contact_name?: string | null
+          contact_role?: string | null
+          created_at?: string
+          id?: string
+          jd_link?: string | null
+          job_type?: string | null
+          linkedin_message?: string | null
+          location?: string | null
+          notes?: string | null
+          role_title?: string
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          applied_date?: string | null
+          category?: string | null
+          company?: string
+          connection_sent_date?: string | null
+          contact_email?: string | null
+          contact_linkedin?: string | null
+          contact_name?: string | null
+          contact_role?: string | null
+          created_at?: string
+          id?: string
+          jd_link?: string | null
+          job_type?: string | null
+          linkedin_message?: string | null
+          location?: string | null
+          notes?: string | null
+          role_title?: string
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       resume_versions: {
         Row: {
           created_at: string
