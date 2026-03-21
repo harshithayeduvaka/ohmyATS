@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { FileText, MessageSquare, History, HelpCircle, Zap, ArrowRight, Search, FileSearch, Mail, Linkedin } from "lucide-react";
+import { FileText, MessageSquare, History, HelpCircle, Zap, ArrowRight, Search, FileSearch, Mail, Linkedin, ClipboardList } from "lucide-react";
 import AuthButton from "@/components/AuthButton";
 import ThemeToggle from "@/components/ThemeToggle";
 
