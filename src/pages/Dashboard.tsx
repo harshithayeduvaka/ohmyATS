@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { FileText, MessageSquare, History, HelpCircle, Zap, ArrowRight, Search, FileSearch, Mail, Linkedin } from "lucide-react";
+import { FileText, MessageSquare, History, HelpCircle, Zap, ArrowRight, Search, FileSearch, Mail, Linkedin, ClipboardList } from "lucide-react";
 import AuthButton from "@/components/AuthButton";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -75,6 +75,14 @@ const tools = [
     href: "/linkedin",
     color: "text-primary",
     bgColor: "bg-primary/10",
+  },
+  {
+    title: "Job Application Tracker",
+    description: "Track all your applications, statuses, contacts, and follow-ups in one organized place.",
+    icon: ClipboardList,
+    href: "/tracker",
+    color: "text-technical",
+    bgColor: "bg-technical/10",
   },
 ];
 
