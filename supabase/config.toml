@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.analyze-linkedin]
 verify_jwt = false
+
+[functions.chat-with-scan]
+verify_jwt = false

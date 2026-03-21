@@ -7,6 +7,10 @@ export interface AlgorithmData {
   hardRequirements: { skill: string; status: "matched" | "missing" | "weak"; context?: string }[];
   softSkills: { skill: string; status: "matched" | "missing" }[];
   phantomMatches: { keyword: string; reason: string }[];
+  similarityScore?: number;
+  keyDifferences?: string[];
+  outdatedTerms?: { term: string; modernAlternative: string }[];
+  trendingSkillsGap?: string[];
 }
 
 export interface HumanPassData {
@@ -14,6 +18,7 @@ export interface HumanPassData {
   strengths: string[];
   weaknesses: string[];
   weakVerbs: { original: string; suggestion: string }[];
+  roleFitAssessment?: string;
 }
 
 export interface RewriteExample {

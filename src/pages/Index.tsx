@@ -22,12 +22,16 @@ const Index = () => {
   const [scanStep, setScanStep] = useState(0);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [rightView, setRightView] = useState<RightView>("results");
+  const [lastCv, setLastCv] = useState("");
+  const [lastJd, setLastJd] = useState("");
   const { user } = useAuth();
   const { toast } = useToast();
 
   const handleScan = useCallback(async (cv: string, jd: string) => {
     setState("scanning");
     setScanStep(0);
+    setLastCv(cv);
+    setLastJd(jd);
 
     const stepInterval = setInterval(() => {
       setScanStep((s) => {
@@ -190,7 +194,7 @@ const Index = () => {
 
         {state === "results" && result && rightView === "results" && (
           <div className="flex-1 min-h-0 overflow-hidden">
-            <ResultsFeed result={result} />
+            <ResultsFeed result={result} cv={lastCv} jd={lastJd} />
           </div>
         )}
       </div>
