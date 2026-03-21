@@ -76,6 +76,14 @@ const tools = [
     color: "text-primary",
     bgColor: "bg-primary/10",
   },
+  {
+    title: "Job Application Tracker",
+    description: "Track all your applications, statuses, contacts, and follow-ups in one organized place.",
+    icon: ClipboardList,
+    href: "/tracker",
+    color: "text-technical",
+    bgColor: "bg-technical/10",
+  },
 ];
 
 const Dashboard = () => {

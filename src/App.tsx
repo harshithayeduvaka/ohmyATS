@@ -39,6 +39,7 @@ const App = () => (
               <Route path="/keywords" element={<KeywordAnalyzer />} />
               <Route path="/cold-outreach" element={<ColdOutreach />} />
               <Route path="/linkedin" element={<LinkedInAnalyzer />} />
+              <Route path="/tracker" element={<JobTracker />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
