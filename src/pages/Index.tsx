@@ -22,6 +22,8 @@ const Index = () => {
   const [scanStep, setScanStep] = useState(0);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [rightView, setRightView] = useState<RightView>("results");
+  const [lastCv, setLastCv] = useState("");
+  const [lastJd, setLastJd] = useState("");
   const { user } = useAuth();
   const { toast } = useToast();
 
