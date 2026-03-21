@@ -30,6 +30,8 @@ const Index = () => {
   const handleScan = useCallback(async (cv: string, jd: string) => {
     setState("scanning");
     setScanStep(0);
+    setLastCv(cv);
+    setLastJd(jd);
 
     const stepInterval = setInterval(() => {
       setScanStep((s) => {
