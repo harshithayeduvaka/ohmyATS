@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, FileText, Copy, Download, Loader2 } from "lucide-react";
+import LanguageSelector from "@/components/LanguageSelector";
 
 interface CoverLetterResult {
   coverLetter: string;
@@ -21,6 +22,7 @@ const CoverLetter = () => {
   const [jd, setJd] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [roleName, setRoleName] = useState("");
+  const [language, setLanguage] = useState<"english" | "french">("english");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CoverLetterResult | null>(null);
 
