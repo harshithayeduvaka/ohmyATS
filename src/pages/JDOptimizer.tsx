@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 const JDOptimizer = () => {
   const [jd, setJd] = useState("");
   const [cv, setCv] = useState("");
+  const [language, setLanguage] = useState<"english" | "french">("english");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [copied, setCopied] = useState(false);
