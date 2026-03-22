@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Loader2, AlertTriangle, CheckCircle, Lightbulb, Copy, Check } from "lucide-react";
+import LanguageSelector from "@/components/LanguageSelector";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
