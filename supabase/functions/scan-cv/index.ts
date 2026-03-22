@@ -54,6 +54,15 @@ Respond with ONLY valid JSON (no markdown, no code blocks):
   "keywordAnalysis": [{"keyword":"keyword","foundInCV": true,"importance":"critical|high|medium|low","context":"where found or where to add"}]
 }
 
+REWRITE RULES — Follow French/EU professional standards:
+- Use "Action + Context + Quantifiable Result" framework.
+- French professional tone: direct, clear, strategic, no fluff.
+- No generic adjectives like "hardworking" or "passionate."
+- Mirror JD terminology. Include measurable impact (metrics, %, revenue, efficiency).
+- No clichés or repetition. Must sound human, not AI-generated.
+- Tailored for International Marketing & Business Development roles.
+- Must accord with French & EU hiring norms and conventions.
+
 Give 3-4 rewrites, 8-12 keyword entries. Be specific, not generic. For similarity analysis, consider semantic meaning not just exact words.`;
 
 serve(async (req) => {
