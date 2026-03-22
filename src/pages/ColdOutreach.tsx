@@ -16,6 +16,7 @@ const ColdOutreach = () => {
   const [jd, setJd] = useState("");
   const [channel, setChannel] = useState<"email" | "linkedin">("email");
   const [tone, setTone] = useState<"professional" | "casual" | "bold">("professional");
+  const [language, setLanguage] = useState<"english" | "french">("english");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
