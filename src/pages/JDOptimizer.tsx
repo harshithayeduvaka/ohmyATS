@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Loader2, AlertTriangle, CheckCircle, Lightbulb, Copy, Check } from "lucide-react";
+import LanguageSelector from "@/components/LanguageSelector";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 const JDOptimizer = () => {
   const [jd, setJd] = useState("");
   const [cv, setCv] = useState("");
+  const [language, setLanguage] = useState<"english" | "french">("english");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [copied, setCopied] = useState(false);
@@ -20,7 +22,7 @@ const JDOptimizer = () => {
     setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("optimize-jd", {
-        body: { jd, cv: cv.trim() || undefined },
+        body: { jd, cv: cv.trim() || undefined, language },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -49,6 +51,7 @@ const JDOptimizer = () => {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+        <LanguageSelector value={language} onChange={setLanguage} />
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">Job Description *</label>

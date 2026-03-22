@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, FileText, Copy, Download, Loader2 } from "lucide-react";
+import LanguageSelector from "@/components/LanguageSelector";
 
 interface CoverLetterResult {
   coverLetter: string;
@@ -21,6 +22,7 @@ const CoverLetter = () => {
   const [jd, setJd] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [roleName, setRoleName] = useState("");
+  const [language, setLanguage] = useState<"english" | "french">("english");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CoverLetterResult | null>(null);
 
@@ -33,7 +35,7 @@ const CoverLetter = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-cover-letter", {
-        body: { cv, jd, companyName, roleName },
+        body: { cv, jd, companyName, roleName, language },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
@@ -67,6 +69,7 @@ const CoverLetter = () => {
       <div className="max-w-6xl mx-auto px-6 py-6 grid lg:grid-cols-2 gap-6">
         {/* Input side */}
         <div className="space-y-4">
+          <LanguageSelector value={language} onChange={setLanguage} />
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Company Name</label>

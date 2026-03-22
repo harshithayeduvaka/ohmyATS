@@ -12,8 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { cv, jd, role, mode } = await req.json();
-    // mode: "generate" = generate questions+answers, "evaluate" = evaluate user's answer
+    const { cv, jd, role, mode, language } = await req.json();
 
     if (!jd) {
       return new Response(
@@ -28,6 +27,11 @@ serve(async (req) => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 60000);
 
+    const lang = language === "french" ? "French" : "English";
+    const langInstruction = language === "french"
+      ? `\n\nIMPORTANT: Write ALL output (questions, answers, tips, whyAsked, categories) in French.`
+      : "";
+
     let systemPrompt: string;
     let userContent: string;
 
@@ -40,8 +44,8 @@ Respond with ONLY valid JSON:
   "feedback": "specific feedback",
   "idealAnswer": "what a strong answer would look like",
   "tips": ["actionable tips"]
-}`;
-      userContent = `Role: ${role}\nJD: ${jd}\n${cv ? `CV: ${cv}` : ""}\n\nQuestion: ${question}\nCandidate Answer: ${answer}`;
+}${langInstruction}`;
+      userContent = `Role: ${role}\nJD: ${jd}\n${cv ? `CV: ${cv}` : ""}\n\nQuestion: ${question}\nCandidate Answer: ${answer}\n\nOutput Language: ${lang}`;
     } else {
       systemPrompt = `You are a senior hiring manager. Generate realistic interview questions for this role.
 Include a mix of: behavioral (STAR format), technical/role-specific, situational, and culture-fit questions.
@@ -61,8 +65,8 @@ Respond with ONLY valid JSON:
   ]
 }
 
-Generate 8-10 questions ordered from warm-up to tough.`;
-      userContent = `Role: ${role || "Not specified"}\n\nJob Description:\n${jd}\n${cv ? `\nCandidate CV:\n${cv}` : ""}`;
+Generate 8-10 questions ordered from warm-up to tough.${langInstruction}`;
+      userContent = `Role: ${role || "Not specified"}\n\nJob Description:\n${jd}\n${cv ? `\nCandidate CV:\n${cv}` : ""}\n\nOutput Language: ${lang}`;
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

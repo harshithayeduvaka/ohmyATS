@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, MessageSquare, Loader2, Send, CheckCircle, XCircle, ChevronDown, ChevronUp } from "lucide-react";
+import LanguageSelector from "@/components/LanguageSelector";
 
 interface InterviewQuestion {
   question: string;
@@ -30,6 +31,7 @@ const InterviewSimulator = () => {
   const [cv, setCv] = useState("");
   const [jd, setJd] = useState("");
   const [role, setRole] = useState("");
+  const [language, setLanguage] = useState<"english" | "french">("english");
   const [loading, setLoading] = useState(false);
   const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
   const [currentQ, setCurrentQ] = useState(0);
@@ -47,7 +49,7 @@ const InterviewSimulator = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("interview-questions", {
-        body: { cv, jd, role, mode: "generate" },
+        body: { cv, jd, role, mode: "generate", language },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
@@ -74,6 +76,7 @@ const InterviewSimulator = () => {
           role,
           question: questions[currentQ].question,
           answer,
+          language,
         },
       });
       if (error) throw new Error(error.message);
@@ -121,6 +124,7 @@ const InterviewSimulator = () => {
         </header>
 
         <div className="max-w-2xl mx-auto px-6 py-8 space-y-4">
+          <LanguageSelector value={language} onChange={setLanguage} />
           <div>
             <label className="text-sm font-medium text-foreground mb-1 block">Role Title</label>
             <Input value={role} onChange={(e) => setRole(e.target.value)} placeholder="e.g. Senior Product Manager" />

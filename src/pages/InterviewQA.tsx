@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, HelpCircle, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import LanguageSelector from "@/components/LanguageSelector";
 
 interface QAItem {
   question: string;
@@ -22,6 +23,7 @@ const InterviewQA = () => {
   const [cv, setCv] = useState("");
   const [jd, setJd] = useState("");
   const [role, setRole] = useState("");
+  const [language, setLanguage] = useState<"english" | "french">("english");
   const [loading, setLoading] = useState(false);
   const [questions, setQuestions] = useState<QAItem[]>([]);
   const [expanded, setExpanded] = useState<number | null>(null);
@@ -34,7 +36,7 @@ const InterviewQA = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("interview-questions", {
-        body: { cv, jd, role, mode: "generate" },
+        body: { cv, jd, role, mode: "generate", language },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
@@ -69,6 +71,7 @@ const InterviewQA = () => {
 
       {questions.length === 0 ? (
         <div className="max-w-2xl mx-auto px-6 py-8 space-y-4">
+          <LanguageSelector value={language} onChange={setLanguage} />
           <div>
             <label className="text-sm font-medium text-foreground mb-1 block">Role Title</label>
             <Input value={role} onChange={(e) => setRole(e.target.value)} placeholder="e.g. Marketing Director" />

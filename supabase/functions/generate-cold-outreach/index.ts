@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { cv, jd, recipientName, recipientRole, companyName, channel, tone } = await req.json();
+    const { cv, jd, recipientName, recipientRole, companyName, channel, tone, language } = await req.json();
     if (!companyName || !recipientName) return new Response(JSON.stringify({ error: "Company name and recipient name are required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -20,6 +20,10 @@ serve(async (req) => {
 
     const channelType = channel || "email";
     const toneType = tone || "professional";
+    const lang = language === "french" ? "French" : "English";
+    const langInstruction = language === "french"
+      ? `\n\nIMPORTANT: Write ALL output text (subject, message, connectionNote, followUp, tips) in French.`
+      : "";
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -50,11 +54,11 @@ Return ONLY valid JSON:
   "followUp": "a follow-up message to send if no response after 5 days",
   "tips": ["tips for improving response rate"],
   "personalizationHooks": ["specific personalization points used"]
-}`
+}${langInstruction}`
           },
           {
             role: "user",
-            content: `Recipient: ${recipientName}\nRole: ${recipientRole || "Hiring Manager"}\nCompany: ${companyName}\nChannel: ${channelType}\nTone: ${toneType}${cv ? `\n\nMy CV:\n${cv}` : ""}${jd ? `\n\nJob Description:\n${jd}` : ""}`
+            content: `Recipient: ${recipientName}\nRole: ${recipientRole || "Hiring Manager"}\nCompany: ${companyName}\nChannel: ${channelType}\nTone: ${toneType}\nOutput Language: ${lang}${cv ? `\n\nMy CV:\n${cv}` : ""}${jd ? `\n\nJob Description:\n${jd}` : ""}`
           }
         ],
       }),

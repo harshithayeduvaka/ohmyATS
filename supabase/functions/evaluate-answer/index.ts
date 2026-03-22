@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { cv, jd, role, question, answer } = await req.json();
+    const { cv, jd, role, question, answer, language } = await req.json();
 
     if (!question || !answer) {
       return new Response(
@@ -27,6 +27,11 @@ serve(async (req) => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 45000);
 
+    const lang = language === "french" ? "French" : "English";
+    const langInstruction = language === "french"
+      ? `\n\nIMPORTANT: Write ALL output (verdict, strengths, weaknesses, idealAnswer, tips) in French.`
+      : "";
+
     const systemPrompt = `You are a brutally honest senior hiring manager evaluating interview answers. Score harshly — most answers are 4-6/10. Only exceptional, structured answers with specific examples score 8+.
 
 Respond with ONLY valid JSON:
@@ -37,9 +42,9 @@ Respond with ONLY valid JSON:
   "weaknesses": ["what was missing or weak"],
   "idealAnswer": "what a perfect answer would sound like, using STAR format with specifics",
   "tips": ["actionable improvement tips"]
-}`;
+}${langInstruction}`;
 
-    const userContent = `Role: ${role || "General"}\n${jd ? `JD: ${jd}\n` : ""}${cv ? `CV: ${cv}\n` : ""}\nQuestion: ${question}\nCandidate's Answer: ${answer}`;
+    const userContent = `Role: ${role || "General"}\n${jd ? `JD: ${jd}\n` : ""}${cv ? `CV: ${cv}\n` : ""}\nQuestion: ${question}\nCandidate's Answer: ${answer}\n\nOutput Language: ${lang}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

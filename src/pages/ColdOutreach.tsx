@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Loader2, Copy, Check, Mail, Linkedin } from "lucide-react";
+import LanguageSelector from "@/components/LanguageSelector";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ const ColdOutreach = () => {
   const [jd, setJd] = useState("");
   const [channel, setChannel] = useState<"email" | "linkedin">("email");
   const [tone, setTone] = useState<"professional" | "casual" | "bold">("professional");
+  const [language, setLanguage] = useState<"english" | "french">("english");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -26,7 +28,7 @@ const ColdOutreach = () => {
     setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("generate-cold-outreach", {
-        body: { cv: cv.trim() || undefined, jd: jd.trim() || undefined, recipientName, recipientRole, companyName, channel, tone },
+        body: { cv: cv.trim() || undefined, jd: jd.trim() || undefined, recipientName, recipientRole, companyName, channel, tone, language },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -61,8 +63,9 @@ const ColdOutreach = () => {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-6">
-        {/* Channel & Tone */}
-        <div className="flex gap-3">
+        {/* Language, Channel & Tone */}
+        <div className="flex gap-3 flex-wrap">
+          <LanguageSelector value={language} onChange={setLanguage} />
           <div className="flex rounded-lg border border-border overflow-hidden">
             <button onClick={() => setChannel("email")} className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors ${channel === "email" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}>
               <Mail className="w-4 h-4" /> Email

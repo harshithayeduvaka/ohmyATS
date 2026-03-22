@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { jd, cv } = await req.json();
+    const { jd, cv, language } = await req.json();
     if (!jd) return new Response(JSON.stringify({ error: "Job description is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -17,6 +17,11 @@ serve(async (req) => {
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 60000);
+
+    const lang = language === "french" ? "French" : "English";
+    const langInstruction = language === "french"
+      ? `\n\nIMPORTANT: Write ALL output text (optimizedJD, keyChanges, warnings, hiddenRequirements, applicationTips, tailoringAdvice) in French.`
+      : "";
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -38,9 +43,9 @@ Return ONLY valid JSON:
   "warnings": ["potential red flags or issues in the JD"],
   "hiddenRequirements": ["requirements that are implied but not explicitly stated"],
   "applicationTips": ["specific tips for applying to this role"]${cv ? ',\n  "tailoringAdvice": ["how to tailor CV specifically for this JD"]' : ""}
-}`
+}${langInstruction}`
           },
-          { role: "user", content: `Job Description:\n${jd}${cv ? `\n\nCandidate CV:\n${cv}` : ""}` }
+          { role: "user", content: `Job Description:\n${jd}${cv ? `\n\nCandidate CV:\n${cv}` : ""}\n\nOutput Language: ${lang}` }
         ],
       }),
     });
