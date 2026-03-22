@@ -69,6 +69,7 @@ const CoverLetter = () => {
       <div className="max-w-6xl mx-auto px-6 py-6 grid lg:grid-cols-2 gap-6">
         {/* Input side */}
         <div className="space-y-4">
+          <LanguageSelector value={language} onChange={setLanguage} />
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Company Name</label>

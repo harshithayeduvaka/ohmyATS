@@ -124,6 +124,7 @@ const InterviewSimulator = () => {
         </header>
 
         <div className="max-w-2xl mx-auto px-6 py-8 space-y-4">
+          <LanguageSelector value={language} onChange={setLanguage} />
           <div>
             <label className="text-sm font-medium text-foreground mb-1 block">Role Title</label>
             <Input value={role} onChange={(e) => setRole(e.target.value)} placeholder="e.g. Senior Product Manager" />

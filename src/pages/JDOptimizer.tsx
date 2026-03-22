@@ -51,6 +51,7 @@ const JDOptimizer = () => {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+        <LanguageSelector value={language} onChange={setLanguage} />
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">Job Description *</label>

@@ -63,8 +63,9 @@ const ColdOutreach = () => {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-6">
-        {/* Channel & Tone */}
-        <div className="flex gap-3">
+        {/* Language, Channel & Tone */}
+        <div className="flex gap-3 flex-wrap">
+          <LanguageSelector value={language} onChange={setLanguage} />
           <div className="flex rounded-lg border border-border overflow-hidden">
             <button onClick={() => setChannel("email")} className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors ${channel === "email" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}>
               <Mail className="w-4 h-4" /> Email
