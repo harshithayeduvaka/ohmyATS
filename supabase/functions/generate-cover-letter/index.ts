@@ -52,13 +52,18 @@ serve(async (req) => {
   }
 
   try {
-    const { cv, jd, companyName, roleName } = await req.json();
+    const { cv, jd, companyName, roleName, language } = await req.json();
     if (!cv || !jd) {
       return new Response(
         JSON.stringify({ error: "Both CV and Job Description are required for cover letter generation" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const lang = language === "french" ? "French" : "English";
+    const langInstruction = language === "french"
+      ? "\n\nIMPORTANT: Write the ENTIRE cover letter in French. All output text must be in French."
+      : "";
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -69,6 +74,7 @@ serve(async (req) => {
     const extra = [
       companyName ? `Company: ${companyName}` : "",
       roleName ? `Role: ${roleName}` : "",
+      `Output Language: ${lang}`,
     ].filter(Boolean).join("\n");
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -80,7 +86,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: SYSTEM_PROMPT + langInstruction },
           { role: "user", content: `CV:\n${cv}\n\nJob Description:\n${jd}\n${extra}` },
         ],
         temperature: 0.5,
