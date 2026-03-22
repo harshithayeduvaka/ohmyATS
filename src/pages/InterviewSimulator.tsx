@@ -76,6 +76,7 @@ const InterviewSimulator = () => {
           role,
           question: questions[currentQ].question,
           answer,
+          language,
         },
       });
       if (error) throw new Error(error.message);
