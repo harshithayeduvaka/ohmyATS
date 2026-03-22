@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, MessageSquare, Loader2, Send, CheckCircle, XCircle, ChevronDown, ChevronUp } from "lucide-react";
+import LanguageSelector from "@/components/LanguageSelector";
 
 interface InterviewQuestion {
   question: string;
