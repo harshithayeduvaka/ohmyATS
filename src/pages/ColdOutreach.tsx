@@ -28,7 +28,7 @@ const ColdOutreach = () => {
     setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("generate-cold-outreach", {
-        body: { cv: cv.trim() || undefined, jd: jd.trim() || undefined, recipientName, recipientRole, companyName, channel, tone },
+        body: { cv: cv.trim() || undefined, jd: jd.trim() || undefined, recipientName, recipientRole, companyName, channel, tone, language },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
