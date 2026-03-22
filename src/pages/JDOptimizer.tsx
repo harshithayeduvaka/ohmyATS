@@ -22,7 +22,7 @@ const JDOptimizer = () => {
     setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("optimize-jd", {
-        body: { jd, cv: cv.trim() || undefined },
+        body: { jd, cv: cv.trim() || undefined, language },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
