@@ -16,6 +16,7 @@ import KeywordAnalyzer from "./pages/KeywordAnalyzer.tsx";
 import ColdOutreach from "./pages/ColdOutreach.tsx";
 import LinkedInAnalyzer from "./pages/LinkedInAnalyzer.tsx";
 import JobTracker from "./pages/JobTracker.tsx";
+import CompanyContacts from "./pages/CompanyContacts.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/cold-outreach" element={<ColdOutreach />} />
               <Route path="/linkedin" element={<LinkedInAnalyzer />} />
               <Route path="/tracker" element={<JobTracker />} />
+              <Route path="/contacts" element={<CompanyContacts />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { FileText, MessageSquare, History, HelpCircle, Zap, ArrowRight, Search, FileSearch, Mail, Linkedin, ClipboardList } from "lucide-react";
+import { FileText, MessageSquare, History, HelpCircle, Zap, ArrowRight, Search, FileSearch, Mail, Linkedin, ClipboardList, Building2 } from "lucide-react";
 import AuthButton from "@/components/AuthButton";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -83,6 +83,14 @@ const tools = [
     href: "/tracker",
     color: "text-technical",
     bgColor: "bg-technical/10",
+  },
+  {
+    title: "Company Contacts",
+    description: "Store company details, CEO, marketing head, HR head with their emails & LinkedIn profiles.",
+    icon: Building2,
+    href: "/contacts",
+    color: "text-primary",
+    bgColor: "bg-primary/10",
   },
 ];
 
