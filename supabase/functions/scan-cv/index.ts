@@ -51,8 +51,27 @@ Respond with ONLY valid JSON (no markdown, no code blocks):
     "impactClarity": 0-100,
     "formatScore": 0-100
   },
-  "keywordAnalysis": [{"keyword":"keyword","foundInCV": true,"importance":"critical|high|medium|low","context":"where found or where to add"}]
+  "keywordAnalysis": [{"keyword":"keyword","foundInCV": true,"importance":"critical|high|medium|low","context":"where found or where to add","whereToAdd":"specific CV section and how to naturally integrate this keyword (only if foundInCV is false)"}],
+  "sectionTips": [
+    {"section":"Summary/Profile","score":0-100,"tips":["specific actionable tip for this section"]},
+    {"section":"Work Experience","score":0-100,"tips":["specific actionable tip"]},
+    {"section":"Skills","score":0-100,"tips":["specific actionable tip"]},
+    {"section":"Education","score":0-100,"tips":["specific actionable tip"]}
+  ],
+  "matchSummary": {
+    "matchRate": 0-100,
+    "hardSkillMatch": 0-100,
+    "softSkillMatch": 0-100,
+    "measurableImpact": 0-100,
+    "summary": "2-3 sentence Jobscan-style verdict: what % of critical requirements are met, biggest gaps, and #1 action to increase match rate"
+  }
 }
+
+SECTION TIPS RULES — Like Jobscan/Resume Worded:
+- Score each CV section independently (Summary, Experience, Skills, Education).
+- Tips must be SPECIFIC: "Add 'growth marketing' to your Skills section" not "Add more keywords."
+- Reference the JD terminology directly.
+- For whereToAdd on missing keywords: specify EXACTLY which section and how to phrase it naturally.
 
 REWRITE RULES — Follow French/EU professional standards:
 - Use "Action + Context + Quantifiable Result" framework.
@@ -63,7 +82,7 @@ REWRITE RULES — Follow French/EU professional standards:
 - Tailored for International Marketing & Business Development roles.
 - Must accord with French & EU hiring norms and conventions.
 
-Give 3-4 rewrites, 8-12 keyword entries. Be specific, not generic. For similarity analysis, consider semantic meaning not just exact words.`;
+Give 3-4 rewrites, 8-12 keyword entries, 4 section tips. Be specific, not generic. For similarity analysis, consider semantic meaning not just exact words.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

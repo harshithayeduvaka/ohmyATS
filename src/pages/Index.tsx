@@ -60,6 +60,8 @@ const Index = () => {
         rewrites: data.rewrites || [],
         scores: data.scores || { overall: 0, atsCompatibility: 0, keywordMatch: 0, recruiterAppeal: 0, impactClarity: 0, formatScore: 0 },
         keywordAnalysis: data.keywordAnalysis || [],
+        sectionTips: data.sectionTips || [],
+        matchSummary: data.matchSummary || undefined,
       };
 
       setScanStep(8);
