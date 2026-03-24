@@ -25,12 +25,12 @@ const KeywordHighlight = ({ keywords }: KeywordHighlightProps) => (
       {keywords.map((kw, i) => (
         <div
           key={i}
-          className="flex items-center gap-3 p-2.5 rounded-md bg-card border border-border"
+          className="flex items-start gap-3 p-2.5 rounded-md bg-card border border-border"
         >
           {kw.foundInCV ? (
-            <CheckCircle className="w-4 h-4 text-accent shrink-0" />
+            <CheckCircle className="w-4 h-4 text-accent shrink-0 mt-0.5" />
           ) : (
-            <XCircle className="w-4 h-4 text-destructive shrink-0" />
+            <XCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
@@ -39,7 +39,12 @@ const KeywordHighlight = ({ keywords }: KeywordHighlightProps) => (
                 {kw.importance}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">{kw.context}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{kw.context}</p>
+            {!kw.foundInCV && kw.whereToAdd && (
+              <p className="text-xs text-accent mt-1 flex items-center gap-1">
+                <span className="font-semibold">💡 Add here:</span> {kw.whereToAdd}
+              </p>
+            )}
           </div>
         </div>
       ))}

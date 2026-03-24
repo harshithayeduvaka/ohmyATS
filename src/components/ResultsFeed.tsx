@@ -6,6 +6,8 @@ import RewriteSection from "./RewriteSection";
 import ScoreDashboard from "./ScoreDashboard";
 import KeywordHighlight from "./KeywordHighlight";
 import ScanChat from "./ScanChat";
+import MatchSummaryCard from "./MatchSummaryCard";
+import SectionTips from "./SectionTips";
 
 interface ResultsFeedProps {
   result: ScanResult;
@@ -21,6 +23,12 @@ const ResultsFeed = ({ result, cv = "", jd = "" }: ResultsFeedProps) => {
           <ScoreDashboard scores={result.scores} />
         </div>
 
+        {result.matchSummary && (
+          <div className="animate-fade-in-up" style={{ animationDelay: "50ms" }}>
+            <MatchSummaryCard data={result.matchSummary} />
+          </div>
+        )}
+
         <div className="animate-fade-in-up" style={{ animationDelay: "100ms" }}>
           <BotPassSection data={result.botPass} />
         </div>
@@ -33,7 +41,6 @@ const ResultsFeed = ({ result, cv = "", jd = "" }: ResultsFeedProps) => {
           <KeywordHighlight keywords={result.keywordAnalysis} />
         </div>
 
-        {/* Role Fit Assessment */}
         {result.humanPass.roleFitAssessment && (
           <div className="animate-fade-in-up bg-card rounded-md border border-border p-4" style={{ animationDelay: "350ms" }}>
             <h3 className="text-xs font-semibold text-foreground uppercase tracking-wide mb-2">Role Fit Assessment</h3>
@@ -44,6 +51,12 @@ const ResultsFeed = ({ result, cv = "", jd = "" }: ResultsFeedProps) => {
         <div className="animate-fade-in-up" style={{ animationDelay: "400ms" }}>
           <HumanPassSection data={result.humanPass} />
         </div>
+
+        {result.sectionTips && result.sectionTips.length > 0 && (
+          <div className="animate-fade-in-up" style={{ animationDelay: "450ms" }}>
+            <SectionTips tips={result.sectionTips} />
+          </div>
+        )}
 
         <div className="animate-fade-in-up" style={{ animationDelay: "500ms" }}>
           <RewriteSection rewrites={result.rewrites} />
