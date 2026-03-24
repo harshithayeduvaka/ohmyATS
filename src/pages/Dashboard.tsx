@@ -84,6 +84,14 @@ const tools = [
     color: "text-technical",
     bgColor: "bg-technical/10",
   },
+  {
+    title: "Company Contacts",
+    description: "Store company details, CEO, marketing head, HR head with their emails & LinkedIn profiles.",
+    icon: Building2,
+    href: "/contacts",
+    color: "text-primary",
+    bgColor: "bg-primary/10",
+  },
 ];
 
 const Dashboard = () => {

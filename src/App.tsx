@@ -41,6 +41,7 @@ const App = () => (
               <Route path="/cold-outreach" element={<ColdOutreach />} />
               <Route path="/linkedin" element={<LinkedInAnalyzer />} />
               <Route path="/tracker" element={<JobTracker />} />
+              <Route path="/contacts" element={<CompanyContacts />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
