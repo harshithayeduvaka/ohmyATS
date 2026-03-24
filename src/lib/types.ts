@@ -41,6 +41,21 @@ export interface KeywordAnalysisItem {
   foundInCV: boolean;
   importance: "critical" | "high" | "medium" | "low";
   context: string;
+  whereToAdd?: string;
+}
+
+export interface SectionTip {
+  section: string;
+  score: number;
+  tips: string[];
+}
+
+export interface MatchSummary {
+  matchRate: number;
+  hardSkillMatch: number;
+  softSkillMatch: number;
+  measurableImpact: number;
+  summary: string;
 }
 
 export interface ScanResult {
@@ -50,4 +65,6 @@ export interface ScanResult {
   rewrites: RewriteExample[];
   scores: ScoreData;
   keywordAnalysis: KeywordAnalysisItem[];
+  sectionTips?: SectionTip[];
+  matchSummary?: MatchSummary;
 }
