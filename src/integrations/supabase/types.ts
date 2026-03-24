@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      company_contacts: {
+        Row: {
+          ceo_email: string | null
+          ceo_linkedin: string | null
+          ceo_name: string | null
+          company: string
+          created_at: string
+          hr_head_email: string | null
+          hr_head_linkedin: string | null
+          hr_head_name: string | null
+          id: string
+          industry: string | null
+          marketing_head_email: string | null
+          marketing_head_linkedin: string | null
+          marketing_head_name: string | null
+          notes: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          ceo_email?: string | null
+          ceo_linkedin?: string | null
+          ceo_name?: string | null
+          company?: string
+          created_at?: string
+          hr_head_email?: string | null
+          hr_head_linkedin?: string | null
+          hr_head_name?: string | null
+          id?: string
+          industry?: string | null
+          marketing_head_email?: string | null
+          marketing_head_linkedin?: string | null
+          marketing_head_name?: string | null
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          ceo_email?: string | null
+          ceo_linkedin?: string | null
+          ceo_name?: string | null
+          company?: string
+          created_at?: string
+          hr_head_email?: string | null
+          hr_head_linkedin?: string | null
+          hr_head_name?: string | null
+          id?: string
+          industry?: string | null
+          marketing_head_email?: string | null
+          marketing_head_linkedin?: string | null
+          marketing_head_name?: string | null
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       job_applications: {
         Row: {
           applied_date: string | null
