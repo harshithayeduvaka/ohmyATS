@@ -8,6 +8,7 @@ import KeywordHighlight from "./KeywordHighlight";
 import ScanChat from "./ScanChat";
 import MatchSummaryCard from "./MatchSummaryCard";
 import SectionTips from "./SectionTips";
+import CVComparison from "./CVComparison";
 
 interface ResultsFeedProps {
   result: ScanResult;
@@ -61,6 +62,12 @@ const ResultsFeed = ({ result, cv = "", jd = "" }: ResultsFeedProps) => {
         <div className="animate-fade-in-up" style={{ animationDelay: "500ms" }}>
           <RewriteSection rewrites={result.rewrites} />
         </div>
+
+        {cv && (
+          <div className="animate-fade-in-up" style={{ animationDelay: "600ms" }}>
+            <CVComparison cv={cv} result={result} />
+          </div>
+        )}
       </div>
 
       <ScanChat result={result} cv={cv} jd={jd} />
