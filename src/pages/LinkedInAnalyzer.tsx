@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Loader2, TrendingUp, TrendingDown, Lightbulb, Target, Users, Zap } from "lucide-react";
+import { ArrowLeft, Loader2, TrendingUp, TrendingDown, Lightbulb, Target, Users, Zap, Upload, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { extractTextFromPdf } from "@/lib/pdfParser";
 
 const ScoreBar = ({ label, score, max = 100 }: { label: string; score: number; max?: number }) => {
   const pct = Math.round((score / max) * 100);
@@ -23,13 +24,59 @@ const ScoreBar = ({ label, score, max = 100 }: { label: string; score: number; m
   );
 };
 
+const FixCard = ({ title, issue, fix, severity }: { title: string; issue: string; fix: string; severity: "high" | "medium" | "low" }) => {
+  const colors = {
+    high: "border-destructive/30 bg-destructive/5",
+    medium: "border-warning/30 bg-warning/5",
+    low: "border-border bg-muted/30",
+  };
+  return (
+    <div className={`p-3 rounded-lg border ${colors[severity]}`}>
+      <p className="text-sm font-medium text-foreground">{title}</p>
+      <p className="text-xs text-destructive mt-0.5">{issue}</p>
+      <div className="mt-2 p-2 rounded-md bg-accent/5 border border-accent/20">
+        <span className="text-[10px] font-semibold text-accent uppercase">Suggested Fix</span>
+        <p className="text-sm text-foreground mt-0.5">{fix}</p>
+      </div>
+    </div>
+  );
+};
+
 const LinkedInAnalyzer = () => {
   const [profileText, setProfileText] = useState("");
   const [targetRole, setTargetRole] = useState("");
   const [industry, setIndustry] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [parsing, setParsing] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const handleFile = async (file: File | undefined) => {
+    if (!file) return;
+    setUploadedFile(file);
+    setParsing(true);
+    try {
+      if (file.type === "application/pdf") {
+        const text = await extractTextFromPdf(file);
+        setProfileText(text);
+      } else {
+        const text = await file.text();
+        setProfileText(text);
+      }
+    } catch {
+      toast({ title: "Error", description: "Could not parse file", variant: "destructive" });
+    } finally {
+      setParsing(false);
+    }
+  };
+
+  const clearFile = () => {
+    setUploadedFile(null);
+    setProfileText("");
+    if (fileRef.current) fileRef.current.value = "";
+  };
 
   const handleAnalyze = async () => {
     if (!profileText.trim()) return;
@@ -55,11 +102,44 @@ const LinkedInAnalyzer = () => {
         <Link to="/" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="w-5 h-5" /></Link>
         <div>
           <h1 className="text-xl font-bold text-foreground">LinkedIn Coach</h1>
-          <p className="text-xs text-muted-foreground">Analyze, optimize & get coaching for your LinkedIn profile</p>
+          <p className="text-xs text-muted-foreground">Analyze, optimize & get actionable fixes for your LinkedIn profile</p>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+        {/* File Upload */}
+        <div>
+          <label className="text-sm font-medium text-foreground mb-1.5 block">Upload LinkedIn Profile Export (optional)</label>
+          <p className="text-xs text-muted-foreground mb-2">Upload a PDF/TXT export of your LinkedIn profile, or paste the text below.</p>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".pdf,.txt,.doc,.docx"
+            className="hidden"
+            onChange={(e) => handleFile(e.target.files?.[0])}
+          />
+          {uploadedFile ? (
+            <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card">
+              <FileText className="w-5 h-5 text-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">{uploadedFile.name}</p>
+                <p className="text-xs text-muted-foreground">{parsing ? "Parsing..." : "Parsed successfully"}</p>
+              </div>
+              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={clearFile}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="w-full p-6 rounded-lg border-2 border-dashed border-border hover:border-primary/40 bg-muted/30 transition-colors text-center"
+            >
+              <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Click to upload PDF or TXT</p>
+            </button>
+          )}
+        </div>
+
         <div>
           <label className="text-sm font-medium text-foreground mb-1.5 block">LinkedIn Profile Text *</label>
           <p className="text-xs text-muted-foreground mb-2">Copy your entire LinkedIn profile (headline, about, experience, skills, etc.) and paste it here.</p>
@@ -107,26 +187,22 @@ const LinkedInAnalyzer = () => {
 
             {/* Headline */}
             {result.headline && (
-              <div className="p-4 rounded-lg border border-border bg-card">
-                <h3 className="font-semibold text-foreground mb-2">Headline Optimization</h3>
-                <div className="space-y-2">
-                  <div><span className="text-xs text-muted-foreground">Current:</span><p className="text-sm text-foreground">{result.headline.current}</p></div>
-                  <div><span className="text-xs text-accent font-medium">Suggested:</span><p className="text-sm text-foreground font-medium">{result.headline.suggested}</p></div>
-                  <p className="text-xs text-muted-foreground">{result.headline.feedback}</p>
-                </div>
-              </div>
+              <FixCard
+                title="Headline"
+                issue={`Current: "${result.headline.current}" — ${result.headline.feedback}`}
+                fix={result.headline.suggested}
+                severity={result.scores?.headline < 40 ? "high" : result.scores?.headline < 70 ? "medium" : "low"}
+              />
             )}
 
             {/* Summary */}
             {result.summary && (
               <div className="p-4 rounded-lg border border-border bg-card">
                 <h3 className="font-semibold text-foreground mb-2">About Section</h3>
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">{result.summary.feedback}</p>
-                  <div className="p-3 rounded-md bg-accent/5 border border-accent/20">
-                    <span className="text-xs text-accent font-medium block mb-1">Suggested About:</span>
-                    <p className="text-sm text-foreground whitespace-pre-wrap">{result.summary.suggested}</p>
-                  </div>
+                <p className="text-xs text-destructive mb-2">{result.summary.feedback}</p>
+                <div className="p-3 rounded-md bg-accent/5 border border-accent/20">
+                  <span className="text-xs text-accent font-medium block mb-1">✅ Suggested About:</span>
+                  <p className="text-sm text-foreground whitespace-pre-wrap">{result.summary.suggested}</p>
                 </div>
               </div>
             )}
@@ -142,7 +218,13 @@ const LinkedInAnalyzer = () => {
               {result.weaknesses?.length > 0 && (
                 <div className="p-4 rounded-lg border border-destructive/30 bg-destructive/5">
                   <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2"><TrendingDown className="w-4 h-4 text-destructive" /> Weaknesses</h3>
-                  <ul className="space-y-1">{result.weaknesses.map((w: string, i: number) => <li key={i} className="text-sm text-muted-foreground">• {w}</li>)}</ul>
+                  <ul className="space-y-1.5">
+                    {result.weaknesses.map((w: string, i: number) => (
+                      <li key={i} className="text-sm text-muted-foreground">
+                        <span>⚠️ {w}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>
@@ -150,15 +232,22 @@ const LinkedInAnalyzer = () => {
             {/* Quick Wins */}
             {result.quickWins?.length > 0 && (
               <div className="p-4 rounded-lg border border-warning/30 bg-warning/5">
-                <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2"><Zap className="w-4 h-4 text-warning" /> Quick Wins</h3>
-                <ul className="space-y-1">{result.quickWins.map((q: string, i: number) => <li key={i} className="text-sm text-muted-foreground">• {q}</li>)}</ul>
+                <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2"><Zap className="w-4 h-4 text-warning" /> Quick Wins — Do These NOW</h3>
+                <div className="space-y-2">
+                  {result.quickWins.map((q: string, i: number) => (
+                    <div key={i} className="flex items-start gap-2 p-2 rounded-md bg-card border border-border">
+                      <span className="text-accent font-bold text-sm mt-0.5">{i + 1}.</span>
+                      <p className="text-sm text-foreground">{q}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Missing Keywords */}
             {result.missingKeywords?.length > 0 && (
               <div className="p-4 rounded-lg border border-border bg-card">
-                <h3 className="font-semibold text-foreground mb-3">Missing Keywords</h3>
+                <h3 className="font-semibold text-foreground mb-3">Missing Keywords — Add These</h3>
                 <div className="flex flex-wrap gap-2">
                   {result.missingKeywords.map((k: string, i: number) => (
                     <span key={i} className="px-2.5 py-1 rounded-md text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20">{k}</span>
@@ -167,17 +256,13 @@ const LinkedInAnalyzer = () => {
               </div>
             )}
 
-            {/* Experience Issues */}
+            {/* Experience Issues with Fixes */}
             {result.experienceIssues?.length > 0 && (
               <div className="p-4 rounded-lg border border-border bg-card">
-                <h3 className="font-semibold text-foreground mb-3">Experience Section Issues</h3>
+                <h3 className="font-semibold text-foreground mb-3">Experience Section — Issues & Fixes</h3>
                 <div className="space-y-3">
                   {result.experienceIssues.map((e: any, i: number) => (
-                    <div key={i} className="p-3 rounded-md bg-muted/50">
-                      <p className="text-sm font-medium text-foreground">{e.section}</p>
-                      <p className="text-xs text-destructive mt-0.5">{e.issue}</p>
-                      <p className="text-xs text-accent mt-0.5">Fix: {e.fix}</p>
-                    </div>
+                    <FixCard key={i} title={e.section} issue={e.issue} fix={e.fix} severity="medium" />
                   ))}
                 </div>
               </div>
