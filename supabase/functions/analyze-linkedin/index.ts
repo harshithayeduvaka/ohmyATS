@@ -32,6 +32,8 @@ serve(async (req) => {
 
 Score harshly. Most profiles score 30-55. Only truly exceptional profiles score 70+.
 
+CRITICAL: For EVERY weakness and issue you identify, you MUST provide a specific, copy-paste-ready fix. Do not just say "your headline is weak" — provide the exact replacement text.
+
 Return ONLY valid JSON:
 {
   "overallScore": number 1-100,
@@ -45,19 +47,19 @@ Return ONLY valid JSON:
   },
   "headline": {
     "current": "their current headline or 'Not found'",
-    "suggested": "optimized headline",
+    "suggested": "optimized headline - ready to copy-paste",
     "feedback": "why the change"
   },
   "summary": {
     "current": "brief summary of their current about section",
-    "suggested": "optimized about section",
+    "suggested": "complete optimized about section - ready to copy-paste",
     "feedback": "what's wrong and why"
   },
-  "experienceIssues": [{"section": "which role", "issue": "what's wrong", "fix": "how to fix"}],
+  "experienceIssues": [{"section": "which role", "issue": "what's wrong", "fix": "exact rewritten text they should use instead"}],
   "missingKeywords": ["keywords they should add for their target role"],
   "strengths": ["what's good about the profile"],
-  "weaknesses": ["what needs fixing"],
-  "quickWins": ["easy changes that will have immediate impact"],
+  "weaknesses": ["what needs fixing - be specific"],
+  "quickWins": ["easy changes with immediate impact - include exact text to add/change"],
   "contentStrategy": {
     "postIdeas": ["3-5 post topic ideas for their niche"],
     "engagementTips": ["tips to increase visibility"],
