@@ -36,7 +36,7 @@ const CoverLetter = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-cover-letter", {
-        body: { cv, jd, companyName, roleName, language },
+        body: { cv, jd, companyName, roleName, language, tone },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
