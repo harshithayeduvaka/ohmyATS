@@ -23,6 +23,7 @@ const CoverLetter = () => {
   const [companyName, setCompanyName] = useState("");
   const [roleName, setRoleName] = useState("");
   const [language, setLanguage] = useState<"english" | "french">("english");
+  const [tone, setTone] = useState<"professional" | "bold" | "creative">("professional");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CoverLetterResult | null>(null);
 
