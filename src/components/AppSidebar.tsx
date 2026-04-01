@@ -2,14 +2,14 @@ import { Link, useLocation } from "react-router-dom";
 import {
   Home, Search, FileText, MessageSquare, HelpCircle, History,
   FileSearch, Zap, Mail, Linkedin, ClipboardList, Building2,
-  StickyNote, Globe, Mic, User, MessageCircle, Bell, Download,
-  Info, Sparkles, LogOut
+  StickyNote, Globe, Mic, User, MessageCircle,
+  Info, Sparkles
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarHeader, SidebarFooter,
   SidebarGroup, SidebarGroupLabel, SidebarGroupContent,
   SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuBadge,
-  SidebarSeparator
+  SidebarSeparator, useSidebar
 } from "@/components/ui/sidebar";
 import ThemeToggle from "@/components/ThemeToggle";
 import AuthButton from "@/components/AuthButton";
@@ -43,6 +43,8 @@ const bottomNav = [
 
 const AppSidebar = () => {
   const location = useLocation();
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
 
   const renderItem = (item: { title: string; icon: any; href: string; badge?: string }) => {
     const isActive = location.pathname === item.href;
@@ -51,10 +53,10 @@ const AppSidebar = () => {
         <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
           <Link to={item.href}>
             <item.icon className="w-4 h-4" />
-            <span>{item.title}</span>
+            {!collapsed && <span>{item.title}</span>}
           </Link>
         </SidebarMenuButton>
-        {item.badge && (
+        {item.badge && !collapsed && (
           <SidebarMenuBadge className="bg-primary text-primary-foreground text-[10px] px-1.5 rounded-full">
             {item.badge}
           </SidebarMenuBadge>
@@ -66,9 +68,12 @@ const AppSidebar = () => {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4">
-        <Link to="/" className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
-          <span className="text-lg font-bold tracking-tight text-foreground group-data-[collapsible=icon]:hidden">oh my ATS</span>
-          <span className="text-lg font-bold tracking-tight text-foreground hidden group-data-[collapsible=icon]:block">A</span>
+        <Link to="/" className="flex items-center gap-2">
+          {collapsed ? (
+            <span className="text-lg font-bold text-foreground">A</span>
+          ) : (
+            <span className="text-lg font-bold tracking-tight text-foreground">oh my ATS</span>
+          )}
         </Link>
       </SidebarHeader>
 
@@ -82,9 +87,11 @@ const AppSidebar = () => {
         <SidebarSeparator />
 
         <SidebarGroup>
-          <SidebarGroupLabel className="flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5" /> AI TOOLS
-          </SidebarGroupLabel>
+          {!collapsed && (
+            <SidebarGroupLabel className="flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" /> AI TOOLS
+            </SidebarGroupLabel>
+          )}
           <SidebarGroupContent>
             <SidebarMenu>{aiTools.map(renderItem)}</SidebarMenu>
           </SidebarGroupContent>
@@ -99,9 +106,9 @@ const AppSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-3 flex flex-row items-center gap-2 group-data-[collapsible=icon]:flex-col">
+      <SidebarFooter className={`p-3 ${collapsed ? "flex flex-col items-center gap-2" : "flex flex-row items-center gap-2"}`}>
         <ThemeToggle />
-        <AuthButton />
+        {!collapsed && <AuthButton />}
       </SidebarFooter>
     </Sidebar>
   );
