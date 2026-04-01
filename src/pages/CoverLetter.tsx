@@ -23,6 +23,7 @@ const CoverLetter = () => {
   const [companyName, setCompanyName] = useState("");
   const [roleName, setRoleName] = useState("");
   const [language, setLanguage] = useState<"english" | "french">("english");
+  const [tone, setTone] = useState<"professional" | "bold" | "creative">("professional");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CoverLetterResult | null>(null);
 
@@ -35,7 +36,7 @@ const CoverLetter = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-cover-letter", {
-        body: { cv, jd, companyName, roleName, language },
+        body: { cv, jd, companyName, roleName, language, tone },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
@@ -70,6 +71,31 @@ const CoverLetter = () => {
         {/* Input side */}
         <div className="space-y-4">
           <LanguageSelector value={language} onChange={setLanguage} />
+
+          <div>
+            <label className="text-sm font-medium text-foreground mb-1.5 block">Tone</label>
+            <div className="flex gap-2">
+              {([
+                { value: "professional" as const, label: "Professional", desc: "Formal & structured" },
+                { value: "bold" as const, label: "Bold & Direct", desc: "Confident & to the point" },
+                { value: "creative" as const, label: "Creative & Unique", desc: "Stands out from the crowd" },
+              ]).map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => setTone(t.value)}
+                  className={`flex-1 p-2.5 rounded-lg border text-left transition-colors ${
+                    tone === t.value
+                      ? "border-primary bg-primary/5 text-foreground"
+                      : "border-border text-muted-foreground hover:border-primary/50"
+                  }`}
+                >
+                  <span className="text-xs font-semibold block">{t.label}</span>
+                  <span className="text-[10px] text-muted-foreground">{t.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Company Name</label>

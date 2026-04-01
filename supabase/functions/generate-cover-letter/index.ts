@@ -52,7 +52,7 @@ serve(async (req) => {
   }
 
   try {
-    const { cv, jd, companyName, roleName, language } = await req.json();
+    const { cv, jd, companyName, roleName, language, tone } = await req.json();
     if (!cv || !jd) {
       return new Response(
         JSON.stringify({ error: "Both CV and Job Description are required for cover letter generation" }),
@@ -64,6 +64,13 @@ serve(async (req) => {
     const langInstruction = language === "french"
       ? "\n\nIMPORTANT: Write the ENTIRE cover letter in French. All output text must be in French."
       : "";
+
+    const toneInstructions: Record<string, string> = {
+      professional: "\n\nTONE: Formal, structured, and polished. Use measured language. Classic corporate style.",
+      bold: "\n\nTONE: Bold, direct, and confident. No hedging. Short punchy sentences. Lead with impact. Cut all filler words. Sound like a senior executive.",
+      creative: "\n\nTONE: Creative and memorable. Use an unexpected opening hook. Show personality. Be witty but professional. Make the reader pause and think 'this one's different.' Avoid corporate clichés entirely.",
+    };
+    const toneInstruction = toneInstructions[tone || "professional"] || toneInstructions.professional;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -86,7 +93,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT + langInstruction },
+          { role: "system", content: SYSTEM_PROMPT + langInstruction + toneInstruction },
           { role: "user", content: `CV:\n${cv}\n\nJob Description:\n${jd}\n${extra}` },
         ],
         temperature: 0.5,
