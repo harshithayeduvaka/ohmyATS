@@ -93,7 +93,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT + langInstruction },
+          { role: "system", content: SYSTEM_PROMPT + langInstruction + toneInstruction },
           { role: "user", content: `CV:\n${cv}\n\nJob Description:\n${jd}\n${extra}` },
         ],
         temperature: 0.5,
