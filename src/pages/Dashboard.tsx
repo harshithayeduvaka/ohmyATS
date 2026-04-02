@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Search, FileText, MessageSquare, HelpCircle, History, FileSearch, Zap, Mail, Linkedin, ClipboardList, Building2, Mic, ArrowRight } from "lucide-react";
+import logoImg from "@/assets/logo.png";
 
 const tools = [
   { title: "ATS Scanner", description: "Analyze your resume against job descriptions for higher match rates.", icon: Search, href: "/scan", iconBg: "bg-purple-100 dark:bg-purple-900/30", iconColor: "text-purple-600 dark:text-purple-400" },
