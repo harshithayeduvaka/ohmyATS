@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Search, FileText, MessageSquare, HelpCircle, History, FileSearch, Zap, Mail, Linkedin, ClipboardList, Building2, Mic, ArrowRight } from "lucide-react";
+import logoImg from "@/assets/logo.png";
 
 const tools = [
   { title: "ATS Scanner", description: "Analyze your resume against job descriptions for higher match rates.", icon: Search, href: "/scan", iconBg: "bg-purple-100 dark:bg-purple-900/30", iconColor: "text-purple-600 dark:text-purple-400" },
@@ -20,6 +21,7 @@ const Dashboard = () => (
   <div className="min-h-screen bg-background">
     <section className="max-w-6xl mx-auto px-6 pt-10 pb-16">
       <div className="mb-10">
+        <img src={logoImg} alt="oh my ATS" className="w-[140px] object-contain dark:invert mb-4" />
         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground leading-tight">
           Think, plan, and land<br />your dream job
         </h1>
