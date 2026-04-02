@@ -2,8 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { ScanResult } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageCircle, Send, X, Loader2 } from "lucide-react";
+import { MessageCircle, Send, X, Loader2, RotateCcw, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import ScoreDashboard from "./ScoreDashboard";
 
 interface ScanChatProps {
   result: ScanResult;
@@ -20,6 +22,10 @@ const ScanChat = ({ result, cv, jd }: ScanChatProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [updatedCv, setUpdatedCv] = useState("");
+  const [showEditor, setShowEditor] = useState(false);
+  const [previewScores, setPreviewScores] = useState<ScanResult["scores"] | null>(null);
+  const [isRescanning, setIsRescanning] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -46,7 +52,7 @@ const ScanChat = ({ result, cv, jd }: ScanChatProps) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: allMessages, cv, jd, scanResult: result }),
+        body: JSON.stringify({ messages: allMessages, cv: updatedCv || cv, jd, scanResult: result }),
       });
 
       if (!resp.ok) {
@@ -99,6 +105,37 @@ const ScanChat = ({ result, cv, jd }: ScanChatProps) => {
     }
   };
 
+  const handleRescan = async () => {
+    const cvToScan = updatedCv.trim();
+    if (!cvToScan) {
+      toast({ title: "Empty CV", description: "Please enter your updated CV text to preview scores.", variant: "destructive" });
+      return;
+    }
+    setIsRescanning(true);
+    setPreviewScores(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("scan-cv", {
+        body: { cv: cvToScan, jd },
+      });
+
+      if (error) throw new Error(error.message || "Rescan failed");
+      if (data?.error) throw new Error(data.error);
+
+      setPreviewScores(data.scores || null);
+
+      const systemMsg: ChatMessage = {
+        role: "assistant",
+        content: `✅ **Updated Score Preview**\n\nI've rescanned your updated CV. Here's how your scores changed:\n\n| Metric | Before | After |\n|--------|--------|-------|\n| Overall | ${result.scores.overall}% | ${data.scores?.overall ?? "?"}% |\n| ATS Compatibility | ${result.scores.atsCompatibility}% | ${data.scores?.atsCompatibility ?? "?"}% |\n| Keyword Match | ${result.scores.keywordMatch}% | ${data.scores?.keywordMatch ?? "?"}% |\n| Recruiter Appeal | ${result.scores.recruiterAppeal}% | ${data.scores?.recruiterAppeal ?? "?"}% |\n\nKeep editing and rescan again to keep improving!`,
+      };
+      setMessages((prev) => [...prev, systemMsg]);
+    } catch (e: any) {
+      toast({ title: "Rescan Failed", description: e.message, variant: "destructive" });
+    } finally {
+      setIsRescanning(false);
+    }
+  };
+
   if (!open) {
     return (
       <Button
@@ -112,17 +149,75 @@ const ScanChat = ({ result, cv, jd }: ScanChatProps) => {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-96 h-[500px] bg-card border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed bottom-6 right-6 z-50 w-[440px] h-[560px] bg-card border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-border flex items-center justify-between bg-muted/50">
         <div className="flex items-center gap-2">
           <MessageCircle className="w-4 h-4 text-primary" />
-          <span className="text-sm font-semibold text-foreground">Chat with ATS Scanner</span>
+          <span className="text-sm font-semibold text-foreground">Chat & Edit CV</span>
         </div>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setOpen(false)}>
-          <X className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant={showEditor ? "secondary" : "ghost"}
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setShowEditor(!showEditor)}
+            title="Toggle CV editor"
+          >
+            <Eye className="w-3.5 h-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setOpen(false)}>
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
+
+      {/* CV Editor Panel */}
+      {showEditor && (
+        <div className="border-b border-border bg-muted/30 p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-foreground">Edit your CV & preview new scores</span>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="gap-1 text-xs h-7"
+              onClick={handleRescan}
+              disabled={isRescanning || !updatedCv.trim()}
+            >
+              {isRescanning ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
+              Rescan
+            </Button>
+          </div>
+          <Textarea
+            value={updatedCv || cv}
+            onChange={(e) => setUpdatedCv(e.target.value)}
+            className="text-xs min-h-[100px] max-h-[150px] resize-none font-mono"
+            placeholder="Paste or edit your CV here..."
+          />
+          {previewScores && (
+            <div className="rounded-lg border border-border bg-card p-2">
+              <div className="grid grid-cols-3 gap-2 text-center">
+                {[
+                  { label: "Overall", before: result.scores.overall, after: previewScores.overall },
+                  { label: "ATS", before: result.scores.atsCompatibility, after: previewScores.atsCompatibility },
+                  { label: "Keywords", before: result.scores.keywordMatch, after: previewScores.keywordMatch },
+                ].map(({ label, before, after }) => (
+                  <div key={label}>
+                    <p className="text-[10px] text-muted-foreground">{label}</p>
+                    <p className="text-xs font-bold">
+                      <span className="text-muted-foreground">{before}%</span>
+                      <span className="mx-1">→</span>
+                      <span className={after > before ? "text-green-500" : after < before ? "text-destructive" : "text-foreground"}>
+                        {after}%
+                      </span>
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
@@ -133,6 +228,10 @@ const ScanChat = ({ result, cv, jd }: ScanChatProps) => {
               <p>"Why did I score low on keyword match?"</p>
               <p>"Rewrite my second bullet point"</p>
               <p>"I actually have 3 years of Python experience"</p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-border">
+              <p className="font-medium mb-1">💡 Live CV Editor</p>
+              <p>Click the <Eye className="w-3 h-3 inline" /> icon above to edit your CV and preview updated scores instantly.</p>
             </div>
           </div>
         )}
