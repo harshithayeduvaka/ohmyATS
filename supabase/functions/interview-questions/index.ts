@@ -49,6 +49,8 @@ Respond with ONLY valid JSON:
     } else {
       systemPrompt = `You are a senior hiring manager. Generate realistic interview questions for this role.
 Include a mix of: behavioral (STAR format), technical/role-specific, situational, and culture-fit questions.
+${companyName ? `The company is "${companyName}". Tailor questions to reflect what this specific company values and how they typically interview.` : ""}
+${companySector ? `The industry/sector is "${companySector}". Include sector-specific questions that test domain knowledge and industry awareness.` : ""}
 ${cv ? "Also provide suggested answers based on the candidate's CV." : ""}
 
 Respond with ONLY valid JSON:
@@ -66,7 +68,7 @@ Respond with ONLY valid JSON:
 }
 
 Generate 8-10 questions ordered from warm-up to tough.${langInstruction}`;
-      userContent = `Role: ${role || "Not specified"}\n\nJob Description:\n${jd}\n${cv ? `\nCandidate CV:\n${cv}` : ""}\n\nOutput Language: ${lang}`;
+      userContent = `Role: ${role || "Not specified"}\n${companyName ? `Company: ${companyName}\n` : ""}${companySector ? `Sector: ${companySector}\n` : ""}\nJob Description:\n${jd}\n${cv ? `\nCandidate CV:\n${cv}` : ""}\n\nOutput Language: ${lang}`;
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
