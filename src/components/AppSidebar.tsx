@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import logo from "@/assets/logo.png";
 import {
   Home, Search, FileText, MessageSquare, HelpCircle, History,
   FileSearch, Zap, Mail, Linkedin, ClipboardList, Building2,
