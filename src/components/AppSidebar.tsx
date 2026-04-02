@@ -70,11 +70,7 @@ const AppSidebar = () => {
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4">
         <Link to="/" className="flex items-center gap-2">
-          {collapsed ? (
-            <span className="text-lg font-bold text-foreground">A</span>
-          ) : (
-            <span className="text-lg font-bold tracking-tight text-foreground">oh my ATS</span>
-          )}
+          <img src={logo} alt="oh my ATS" className={`object-contain dark:invert ${collapsed ? "w-7 h-7" : "w-[120px]"}`} />
         </Link>
       </SidebarHeader>
 
