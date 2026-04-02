@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { cv, jd, role, mode, language } = await req.json();
+    const { cv, jd, role, companyName, companySector, mode, language } = await req.json();
 
     if (!jd) {
       return new Response(
