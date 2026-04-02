@@ -78,6 +78,16 @@ const InterviewQA = () => {
             <label className="text-sm font-medium text-foreground mb-1 block">Role Title</label>
             <Input value={role} onChange={(e) => setRole(e.target.value)} placeholder="e.g. Marketing Director" />
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">Company Name</label>
+              <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="e.g. L'Oréal, Tesla, Google" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">Company Sector</label>
+              <Input value={companySector} onChange={(e) => setCompanySector(e.target.value)} placeholder="e.g. Luxury, Tech, FMCG" />
+            </div>
+          </div>
           <div>
             <label className="text-sm font-medium text-foreground mb-1 block">Job Description *</label>
             <Textarea value={jd} onChange={(e) => setJd(e.target.value)} placeholder="Paste the JD..." className="min-h-[160px] resize-none font-mono text-sm" />
