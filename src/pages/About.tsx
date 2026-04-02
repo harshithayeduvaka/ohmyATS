@@ -1,10 +1,11 @@
-import { Info, Heart } from "lucide-react";
+import { Info, Heart, Mail } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 const About = () => (
   <div className="min-h-screen bg-background">
     <div className="max-w-3xl mx-auto px-6 py-8">
       <div className="flex items-center gap-3 mb-8">
-        <Info className="w-6 h-6 text-primary" />
+        <img src={logo} alt="oh my ATS" className="w-10 h-10 object-contain dark:invert" />
         <h1 className="text-2xl font-bold text-foreground">About oh my ATS</h1>
       </div>
 
@@ -16,25 +17,25 @@ const About = () => (
           </div>
           <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
             <p>
-              I'm a student myself, currently hunting for jobs — and I'm <strong className="text-foreground">sick of fake CV scores</strong> that
-              only exist to push you into making a purchase. Come on. No matter what score you get, HRs use completely
-              different professional software on their end. Even if you paid to "beat the ATS," recruiters are running
-              your CV through systems you've never even heard of.
+              Hey, I'm a student just like many of you, going through the whole job hunt grind. And honestly?
+              I got really frustrated with how most ATS scanners work. They show you a score, make you feel
+              like your CV isn't good enough, and then ask you to pay to "fix" it. But here's the thing:
+              even after you pay, HRs on the other side are using completely different software to screen your application.
+              Your "optimized" CV might not even matter.
             </p>
             <p>
-              I personally believe <strong className="text-foreground">every ATS scanner varies</strong>, and the criteria
-              changes for every software. What Jobscan flags, Bullhorn might ignore. What Resume Worded highlights,
-              Lever doesn't even check. There's no single "perfect score" — that's the uncomfortable truth nobody
-              tells you before asking for your credit card.
+              The truth is, every ATS system is different. What one flags, another ignores. There's no magic number
+              that guarantees you'll get through. I felt like nobody was being honest about that, so I decided to
+              build something that actually tries to help instead of just selling you false confidence.
             </p>
             <p>
-              So I tried putting all my efforts into building something that actually helps. I referenced
-              <strong className="text-foreground"> Bullhorn, Jobscan, Resume Worded, Lever, Greenhouse</strong> and
-              other widely-used ATS systems to create a scanner that gives you a <em>realistic, multi-perspective</em> analysis —
-              not just a number designed to make you feel bad enough to pay.
+              I've been studying how some of the popular ATS systems work and referencing their logic to make this
+              tool as realistic as possible. It's not perfect yet, and I'm still actively improving it. But I
+              wanted to give people something free and genuinely useful rather than another paywall dressed up
+              as career advice.
             </p>
             <p>
-              This tool is built <strong className="text-foreground">by a job seeker, for job seekers</strong>. No
+              This is built <strong className="text-foreground">by a job seeker, for job seekers</strong>. No
               paywalls for basic features. No inflated scores. No dark patterns. Just honest, actionable feedback
               to help you land the role you deserve.
             </p>
@@ -42,17 +43,21 @@ const About = () => (
         </div>
 
         <div className="p-6 rounded-xl border border-border bg-card">
-          <h2 className="font-semibold text-foreground mb-3">What We Reference</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {["Bullhorn", "Jobscan", "Resume Worded", "Lever", "Greenhouse", "Workday", "iCIMS", "Taleo", "SmartRecruiters"].map((name) => (
-              <div key={name} className="px-3 py-2 rounded-lg bg-muted text-center">
-                <span className="text-sm font-medium text-foreground">{name}</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground mt-3">
-            We study how these systems parse, score, and filter CVs to give you the most comprehensive analysis possible.
+          <h2 className="font-semibold text-foreground mb-3">Still Improving</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+            This tool is a work in progress and I'm constantly tweaking the algorithms, adding new features,
+            and trying to make the feedback more accurate. If you have suggestions, found a bug, or just want
+            to tell me what you think, I'd genuinely love to hear from you.
           </p>
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
+            <Mail className="w-4 h-4 text-primary shrink-0" />
+            <a
+              href="mailto:yeduvakaharshitha@gmail.com"
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              yeduvakaharshitha@gmail.com
+            </a>
+          </div>
         </div>
       </div>
     </div>
