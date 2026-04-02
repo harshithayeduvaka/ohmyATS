@@ -23,6 +23,8 @@ const InterviewQA = () => {
   const [cv, setCv] = useState("");
   const [jd, setJd] = useState("");
   const [role, setRole] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [companySector, setCompanySector] = useState("");
   const [language, setLanguage] = useState<"english" | "french">("english");
   const [loading, setLoading] = useState(false);
   const [questions, setQuestions] = useState<QAItem[]>([]);
