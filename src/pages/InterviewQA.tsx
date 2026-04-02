@@ -23,6 +23,8 @@ const InterviewQA = () => {
   const [cv, setCv] = useState("");
   const [jd, setJd] = useState("");
   const [role, setRole] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [companySector, setCompanySector] = useState("");
   const [language, setLanguage] = useState<"english" | "french">("english");
   const [loading, setLoading] = useState(false);
   const [questions, setQuestions] = useState<QAItem[]>([]);
@@ -36,7 +38,7 @@ const InterviewQA = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("interview-questions", {
-        body: { cv, jd, role, mode: "generate", language },
+        body: { cv, jd, role, companyName, companySector, mode: "generate", language },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
@@ -75,6 +77,16 @@ const InterviewQA = () => {
           <div>
             <label className="text-sm font-medium text-foreground mb-1 block">Role Title</label>
             <Input value={role} onChange={(e) => setRole(e.target.value)} placeholder="e.g. Marketing Director" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">Company Name</label>
+              <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="e.g. L'Oréal, Tesla, Google" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">Company Sector</label>
+              <Input value={companySector} onChange={(e) => setCompanySector(e.target.value)} placeholder="e.g. Luxury, Tech, FMCG" />
+            </div>
           </div>
           <div>
             <label className="text-sm font-medium text-foreground mb-1 block">Job Description *</label>
