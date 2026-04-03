@@ -39,7 +39,7 @@ const InterviewQA = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("interview-questions", {
-        body: { cv, jd, role, companyName, companySector, mode: "generate", language },
+        body: { cv, jd, role, companyName, companySector, interviewType, mode: "generate", language },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
