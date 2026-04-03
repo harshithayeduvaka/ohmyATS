@@ -31,6 +31,7 @@ const InterviewSimulator = () => {
   const [cv, setCv] = useState("");
   const [jd, setJd] = useState("");
   const [role, setRole] = useState("");
+  const [interviewType, setInterviewType] = useState("");
   const [language, setLanguage] = useState<"english" | "french">("english");
   const [loading, setLoading] = useState(false);
   const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
