@@ -31,6 +31,7 @@ const InterviewSimulator = () => {
   const [cv, setCv] = useState("");
   const [jd, setJd] = useState("");
   const [role, setRole] = useState("");
+  const [interviewType, setInterviewType] = useState("");
   const [language, setLanguage] = useState<"english" | "french">("english");
   const [loading, setLoading] = useState(false);
   const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
@@ -49,7 +50,7 @@ const InterviewSimulator = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("interview-questions", {
-        body: { cv, jd, role, mode: "generate", language },
+        body: { cv, jd, role, interviewType, mode: "generate", language },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
@@ -128,6 +129,10 @@ const InterviewSimulator = () => {
           <div>
             <label className="text-sm font-medium text-foreground mb-1 block">Role Title</label>
             <Input value={role} onChange={(e) => setRole(e.target.value)} placeholder="e.g. Senior Product Manager" />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-foreground mb-1 block">Interview Type</label>
+            <Input value={interviewType} onChange={(e) => setInterviewType(e.target.value)} placeholder="e.g. HR, Technical, Coffee Chat, Chat with the Founder" />
           </div>
           <div>
             <label className="text-sm font-medium text-foreground mb-1 block">Job Description *</label>

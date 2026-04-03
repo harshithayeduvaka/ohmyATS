@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { cv, jd, role, companyName, companySector, mode, language } = await req.json();
+    const { cv, jd, role, companyName, companySector, interviewType, mode, language } = await req.json();
 
     if (!jd) {
       return new Response(
@@ -47,11 +47,23 @@ Respond with ONLY valid JSON:
 }${langInstruction}`;
       userContent = `Role: ${role}\nJD: ${jd}\n${cv ? `CV: ${cv}` : ""}\n\nQuestion: ${question}\nCandidate Answer: ${answer}\n\nOutput Language: ${lang}`;
     } else {
+      const interviewTypeInstruction = interviewType
+        ? `The interview type is "${interviewType}". Adjust question style accordingly:
+- "HR" = behavioral, motivation, culture fit, salary expectations, career goals
+- "Technical" = hard skills, problem-solving, case studies, domain expertise
+- "Coffee Chat" = casual, conversational, exploratory, company culture, mutual fit
+- "Chat with the Founder" = vision alignment, entrepreneurial thinking, big-picture strategy, passion for the mission
+- For any other type, adapt the tone and question style to match what "${interviewType}" implies.`
+        : "";
+
       systemPrompt = `You are a senior hiring manager. Generate realistic interview questions for this role.
-Include a mix of: behavioral (STAR format), technical/role-specific, situational, and culture-fit questions.
+Include a mix of questions appropriate for the interview context.
 ${companyName ? `The company is "${companyName}". Tailor questions to reflect what this specific company values and how they typically interview.` : ""}
 ${companySector ? `The industry/sector is "${companySector}". Include sector-specific questions that test domain knowledge and industry awareness.` : ""}
-${cv ? "Also provide suggested answers based on the candidate's CV." : ""}
+${interviewTypeInstruction}
+${cv ? "Also provide suggested answers based STRICTLY on the candidate's CV. Do NOT fabricate or assume any experience, skills, projects, or achievements that are not explicitly mentioned in the CV. If the CV doesn't contain relevant experience for a question, say so honestly in the suggested answer and guide the candidate on how to frame transferable skills from what IS in their CV." : ""}
+
+CRITICAL: Every suggested answer MUST be directly traceable to specific content in the candidate's CV. Never invent metrics, projects, company names, or experiences.
 
 Respond with ONLY valid JSON:
 {
@@ -68,7 +80,7 @@ Respond with ONLY valid JSON:
 }
 
 Generate 8-10 questions ordered from warm-up to tough.${langInstruction}`;
-      userContent = `Role: ${role || "Not specified"}\n${companyName ? `Company: ${companyName}\n` : ""}${companySector ? `Sector: ${companySector}\n` : ""}\nJob Description:\n${jd}\n${cv ? `\nCandidate CV:\n${cv}` : ""}\n\nOutput Language: ${lang}`;
+      userContent = `Role: ${role || "Not specified"}\n${companyName ? `Company: ${companyName}\n` : ""}${companySector ? `Sector: ${companySector}\n` : ""}${interviewType ? `Interview Type: ${interviewType}\n` : ""}\nJob Description:\n${jd}\n${cv ? `\nCandidate CV:\n${cv}` : ""}\n\nOutput Language: ${lang}`;
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
