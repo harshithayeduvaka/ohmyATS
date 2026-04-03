@@ -131,6 +131,10 @@ const InterviewSimulator = () => {
             <Input value={role} onChange={(e) => setRole(e.target.value)} placeholder="e.g. Senior Product Manager" />
           </div>
           <div>
+            <label className="text-sm font-medium text-foreground mb-1 block">Interview Type</label>
+            <Input value={interviewType} onChange={(e) => setInterviewType(e.target.value)} placeholder="e.g. HR, Technical, Coffee Chat, Chat with the Founder" />
+          </div>
+          <div>
             <label className="text-sm font-medium text-foreground mb-1 block">Job Description *</label>
             <Textarea value={jd} onChange={(e) => setJd(e.target.value)} placeholder="Paste the JD..." className="min-h-[160px] resize-none font-mono text-sm" />
           </div>

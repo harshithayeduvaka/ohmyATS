@@ -84,7 +84,14 @@ REWRITE RULES — Follow French/EU professional standards:
 - Tailored for International Marketing & Business Development roles.
 - Must accord with French & EU hiring norms and conventions.
 
-Give 3-4 rewrites, 8-12 keyword entries, 4 section tips. Be specific, not generic. For similarity analysis, consider semantic meaning not just exact words.`;
+ACCURACY RULES:
+- Cross-check EVERY hard requirement in the JD against the CV line by line. Do not skip any.
+- For keyword analysis: scan the ENTIRE JD, extract ALL technical terms, tools, methodologies, certifications, and soft skills mentioned. Check each against the CV.
+- Similarity score must reflect actual content overlap, not surface-level word matching. Use semantic understanding.
+- Section tips must reference SPECIFIC lines/content from both the CV and JD.
+- Rewrites must use ONLY information present in the CV — never fabricate metrics or experiences.
+
+Give 4-6 rewrites, 10-15 keyword entries, 4 section tips. Be specific, not generic. For similarity analysis, consider semantic meaning not just exact words.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

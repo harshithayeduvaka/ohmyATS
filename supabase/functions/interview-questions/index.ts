@@ -80,7 +80,7 @@ Respond with ONLY valid JSON:
 }
 
 Generate 8-10 questions ordered from warm-up to tough.${langInstruction}`;
-      userContent = `Role: ${role || "Not specified"}\n${companyName ? `Company: ${companyName}\n` : ""}${companySector ? `Sector: ${companySector}\n` : ""}\nJob Description:\n${jd}\n${cv ? `\nCandidate CV:\n${cv}` : ""}\n\nOutput Language: ${lang}`;
+      userContent = `Role: ${role || "Not specified"}\n${companyName ? `Company: ${companyName}\n` : ""}${companySector ? `Sector: ${companySector}\n` : ""}${interviewType ? `Interview Type: ${interviewType}\n` : ""}\nJob Description:\n${jd}\n${cv ? `\nCandidate CV:\n${cv}` : ""}\n\nOutput Language: ${lang}`;
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
