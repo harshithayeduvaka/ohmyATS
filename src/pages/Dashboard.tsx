@@ -3,7 +3,7 @@ import { Search, FileText, MessageSquare, HelpCircle, History, FileSearch, Zap, 
 import logoImg from "@/assets/logo.png";
 
 const tools = [
-  { title: "ATS Scanner", description: "Analyze your resume against job descriptions for higher match rates.", icon: Search, href: "/scan", iconBg: "bg-purple-100 dark:bg-purple-900/30", iconColor: "text-purple-600 dark:text-purple-400" },
+  { title: "Scan My Resume Now", description: "Analyze your resume against job descriptions for higher match rates.", icon: Search, href: "/scan", iconBg: "bg-purple-100 dark:bg-purple-900/30", iconColor: "text-purple-600 dark:text-purple-400" },
   { title: "Cover Letter Generator", description: "Create tailored, compelling cover letters in seconds with AI.", icon: FileText, href: "/cover-letter", iconBg: "bg-emerald-100 dark:bg-emerald-900/30", iconColor: "text-emerald-600 dark:text-emerald-400" },
   { title: "Interview Simulator", description: "Practice with real-time feedback and boost your confidence.", icon: MessageSquare, href: "/interview", iconBg: "bg-amber-100 dark:bg-amber-900/30", iconColor: "text-amber-600 dark:text-amber-400" },
   { title: "Interview Q&A Bank", description: "Get likely interview questions with suggested answers.", icon: HelpCircle, href: "/interview-qa", iconBg: "bg-rose-100 dark:bg-rose-900/30", iconColor: "text-rose-600 dark:text-rose-400" },
