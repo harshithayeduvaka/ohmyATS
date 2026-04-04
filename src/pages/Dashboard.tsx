@@ -25,8 +25,9 @@ const Dashboard = () => (
         <h1 className="text-4xl font-bold tracking-tight text-foreground leading-tight">
           Match your resume to any job description in seconds.
         </h1>
-        <p className="font-normal">
-        </p>
+        <h2 className="mt-2 text-sm font-normal font-sans text-muted-foreground">
+          Highly qualified but still getting the auto-reject email?
+        </h2>
         <div className="mt-6 flex gap-3">
           <Link to="/scan" className="inline-flex items-center px-6 py-2.5 rounded-full bg-foreground text-background font-medium text-sm hover:opacity-90 transition-opacity">
             Get Started
