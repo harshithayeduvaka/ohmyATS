@@ -29,7 +29,7 @@ const aiTools = [
   { title: "Cover Letters", icon: FileText, href: "/cover-letter" },
   { title: "Interview Sim", icon: MessageSquare, href: "/interview" },
   { title: "Interview Q&A", icon: HelpCircle, href: "/interview-qa" },
-  { title: "JD Optimizer", icon: FileSearch, href: "/jd-optimizer" },
+  { title: "JD Optimiser", icon: FileSearch, href: "/jd-optimizer" },
   { title: "Keywords", icon: Zap, href: "/keywords" },
   { title: "LinkedIn Coach", icon: Linkedin, href: "/linkedin" },
   { title: "Elevator Pitch", icon: Mic, href: "/elevator-pitch" },
