@@ -106,6 +106,23 @@ const Index = () => {
     setRightView("results");
   };
 
+  const handleSaveVersion = async () => {
+    if (!user || !result) return;
+    const { error } = await supabase.from("resume_versions").insert({
+      user_id: user.id,
+      title: `Scan — ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`,
+      cv_text: lastCv,
+      jd_text: lastJd || null,
+      overall_score: result.scores?.overall ?? null,
+      scan_result: result as any,
+    });
+    if (error) {
+      toast({ title: "Failed to save version", variant: "destructive" });
+    } else {
+      toast({ title: "Saved to Resume Versions!" });
+    }
+  };
+
   return (
     <div className="flex h-screen bg-background">
       {/* Left panel */}
