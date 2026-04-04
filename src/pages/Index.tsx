@@ -9,7 +9,7 @@ import { ScanResult } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Download, History, LayoutDashboard, ArrowLeft } from "lucide-react";
+import { Download, History, LayoutDashboard, ArrowLeft, Save } from "lucide-react";
 import { generatePdfReport } from "@/lib/pdfReport";
 import { Button } from "@/components/ui/button";
 
@@ -106,6 +106,23 @@ const Index = () => {
     setRightView("results");
   };
 
+  const handleSaveVersion = async () => {
+    if (!user || !result) return;
+    const { error } = await supabase.from("resume_versions").insert({
+      user_id: user.id,
+      title: `Scan — ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`,
+      cv_text: lastCv,
+      jd_text: lastJd || null,
+      overall_score: result.scores?.overall ?? null,
+      scan_result: result as any,
+    });
+    if (error) {
+      toast({ title: "Failed to save version", variant: "destructive" });
+    } else {
+      toast({ title: "Saved to Resume Versions!" });
+    }
+  };
+
   return (
     <div className="flex h-screen bg-background">
       {/* Left panel */}
@@ -130,15 +147,28 @@ const Index = () => {
                   Report
                 </Button>
                 {result && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1.5 text-xs"
-                    onClick={() => generatePdfReport(result)}
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    PDF
-                  </Button>
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1.5 text-xs"
+                      onClick={() => generatePdfReport(result)}
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      PDF
+                    </Button>
+                    {user && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1.5 text-xs"
+                        onClick={handleSaveVersion}
+                      >
+                        <Save className="w-3.5 h-3.5" />
+                        Save Version
+                      </Button>
+                    )}
+                  </>
                 )}
               </>
             )}

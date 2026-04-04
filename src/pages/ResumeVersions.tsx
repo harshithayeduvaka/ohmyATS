@@ -6,7 +6,20 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Plus, Trash2, History, TrendingUp, TrendingDown, Minus, Loader2 } from "lucide-react";
+import ResultsFeed from "@/components/ResultsFeed";
+import { ScanResult } from "@/lib/types";
+import {
+  ArrowLeft,
+  Plus,
+  Trash2,
+  History,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Loader2,
+  Eye,
+  X,
+} from "lucide-react";
 
 interface ResumeVersion {
   id: string;
@@ -27,7 +40,10 @@ const ResumeVersions = () => {
   const [showAdd, setShowAdd] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newCv, setNewCv] = useState("");
+  const [newJd, setNewJd] = useState("");
+  const [newScore, setNewScore] = useState("");
   const [saving, setSaving] = useState(false);
+  const [viewingVersion, setViewingVersion] = useState<ResumeVersion | null>(null);
 
   const fetchVersions = async () => {
     if (!user) return;
@@ -49,10 +65,13 @@ const ResumeVersions = () => {
   const handleSave = async () => {
     if (!user || !newCv.trim()) return;
     setSaving(true);
+    const scoreNum = newScore.trim() ? parseInt(newScore, 10) : null;
     const { error } = await supabase.from("resume_versions").insert({
       user_id: user.id,
       title: newTitle.trim() || "Untitled CV",
       cv_text: newCv,
+      jd_text: newJd.trim() || null,
+      overall_score: scoreNum != null && !isNaN(scoreNum) ? Math.min(100, Math.max(0, scoreNum)) : null,
     });
     if (error) {
       toast({ title: "Failed to save", variant: "destructive" });
@@ -61,6 +80,8 @@ const ResumeVersions = () => {
       setShowAdd(false);
       setNewTitle("");
       setNewCv("");
+      setNewJd("");
+      setNewScore("");
       fetchVersions();
     }
     setSaving(false);
@@ -72,6 +93,7 @@ const ResumeVersions = () => {
       toast({ title: "Failed to delete", variant: "destructive" });
     } else {
       setVersions((prev) => prev.filter((v) => v.id !== id));
+      if (viewingVersion?.id === id) setViewingVersion(null);
     }
   };
 
@@ -85,6 +107,56 @@ const ResumeVersions = () => {
     if (diff < 0) return { icon: TrendingDown, color: "text-destructive", diff: `${diff}` };
     return { icon: Minus, color: "text-muted-foreground", diff: "0" };
   };
+
+  // Detail view for a version with scan results
+  if (viewingVersion) {
+    const hasScanResult = viewingVersion.scan_result && Object.keys(viewingVersion.scan_result).length > 0;
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="border-b border-border px-6 py-3 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" onClick={() => setViewingVersion(null)} className="gap-1.5">
+              <ArrowLeft className="w-4 h-4" /> Back to Versions
+            </Button>
+            <div>
+              <h1 className="text-lg font-bold text-foreground">{viewingVersion.title}</h1>
+              <p className="text-xs text-muted-foreground">
+                {new Date(viewingVersion.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                {viewingVersion.overall_score != null && ` · Score: ${viewingVersion.overall_score}/100`}
+              </p>
+            </div>
+          </div>
+        </header>
+
+        {hasScanResult ? (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <ResultsFeed
+              result={viewingVersion.scan_result as ScanResult}
+              cv={viewingVersion.cv_text}
+              jd={viewingVersion.jd_text || ""}
+            />
+          </div>
+        ) : (
+          <div className="flex-1 overflow-auto px-6 py-6 max-w-3xl mx-auto w-full space-y-4">
+            <div className="p-4 rounded-xl border border-border bg-card space-y-3">
+              <h3 className="text-sm font-semibold text-foreground">CV Content</h3>
+              <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">{viewingVersion.cv_text}</pre>
+            </div>
+            {viewingVersion.jd_text && (
+              <div className="p-4 rounded-xl border border-border bg-card space-y-3">
+                <h3 className="text-sm font-semibold text-foreground">Job Description</h3>
+                <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">{viewingVersion.jd_text}</pre>
+              </div>
+            )}
+            <div className="text-center py-8">
+              <p className="text-sm text-muted-foreground">No scan results available for this version.</p>
+              <p className="text-xs text-muted-foreground mt-1">Scan this CV through the app to generate a full report.</p>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -114,19 +186,30 @@ const ResumeVersions = () => {
           </Button>
           <div>
             <h1 className="text-lg font-bold text-foreground">Resume Version History</h1>
-            <p className="text-xs text-muted-foreground">Track and compare your CV improvements</p>
+            <p className="text-xs text-muted-foreground">Track and compare your CV improvements — auto-saved from scans or added manually</p>
           </div>
         </div>
         <Button size="sm" onClick={() => setShowAdd(!showAdd)} className="gap-1.5">
-          <Plus className="w-4 h-4" /> Save New Version
+          <Plus className="w-4 h-4" /> Add Manually
         </Button>
       </header>
 
       <div className="max-w-3xl mx-auto px-6 py-6 space-y-4">
         {showAdd && (
           <div className="p-4 rounded-xl border border-border bg-card space-y-3 animate-fade-in-up">
+            <p className="text-xs text-muted-foreground">Add a CV version from an external tool or manual entry.</p>
             <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Version name, e.g. 'v3 — added metrics'" />
-            <Textarea value={newCv} onChange={(e) => setNewCv(e.target.value)} placeholder="Paste your CV text..." className="min-h-[160px] resize-none font-mono text-sm" />
+            <Textarea value={newCv} onChange={(e) => setNewCv(e.target.value)} placeholder="Paste your CV text..." className="min-h-[120px] resize-none font-mono text-sm" />
+            <Textarea value={newJd} onChange={(e) => setNewJd(e.target.value)} placeholder="Paste the job description (optional)..." className="min-h-[80px] resize-none font-mono text-sm" />
+            <Input
+              value={newScore}
+              onChange={(e) => setNewScore(e.target.value.replace(/[^0-9]/g, ""))}
+              placeholder="ATS score from external tool (0–100, optional)"
+              type="text"
+              inputMode="numeric"
+              maxLength={3}
+              className="max-w-[280px]"
+            />
             <div className="flex gap-2 justify-end">
               <Button variant="ghost" size="sm" onClick={() => setShowAdd(false)}>Cancel</Button>
               <Button size="sm" onClick={handleSave} disabled={saving || !newCv.trim()}>
@@ -141,14 +224,21 @@ const ResumeVersions = () => {
         ) : versions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <History className="w-10 h-10 text-muted-foreground/30 mb-3" />
-            <p className="text-sm text-muted-foreground">No versions saved yet. Save your first CV to start tracking.</p>
+            <p className="text-sm text-muted-foreground">No versions saved yet.</p>
+            <p className="text-xs text-muted-foreground mt-1">Scan a CV to auto-save here, or add one manually.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {versions.map((v, i) => {
               const trend = scoreTrend(i);
+              const hasScanResult = v.scan_result && Object.keys(v.scan_result).length > 0;
               return (
-                <div key={v.id} className="p-4 rounded-xl border border-border bg-card hover:border-primary/30 transition-colors animate-fade-in-up" style={{ animationDelay: `${i * 40}ms` }}>
+                <div
+                  key={v.id}
+                  className="p-4 rounded-xl border border-border bg-card hover:border-primary/30 transition-colors animate-fade-in-up cursor-pointer"
+                  style={{ animationDelay: `${i * 40}ms` }}
+                  onClick={() => setViewingVersion(v)}
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -163,13 +253,23 @@ const ResumeVersions = () => {
                             <trend.icon className="w-3 h-3" /> {trend.diff}
                           </span>
                         )}
+                        {hasScanResult && (
+                          <span className="text-xs text-primary/70 flex items-center gap-0.5">
+                            <Eye className="w-3 h-3" /> Report
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         {new Date(v.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1 truncate">{v.cv_text.substring(0, 100)}...</p>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(v.id)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                      onClick={(e) => { e.stopPropagation(); handleDelete(v.id); }}
+                    >
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
