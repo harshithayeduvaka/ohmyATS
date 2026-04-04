@@ -43,7 +43,7 @@ const Dashboard = () => (
             <div className={`w-10 h-10 rounded-xl ${tool.iconBg} flex items-center justify-center mb-3`}>
               <tool.icon className={`w-5 h-5 ${tool.iconColor}`} />
             </div>
-            <h3 className="text-base font-bold text-foreground mb-1 flex items-center gap-2">
+            <h3 className="text-base text-foreground mb-1 flex items-center gap-2 font-bold">
               {tool.title}
               <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
             </h3>
