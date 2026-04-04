@@ -147,15 +147,28 @@ const Index = () => {
                   Report
                 </Button>
                 {result && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1.5 text-xs"
-                    onClick={() => generatePdfReport(result)}
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    PDF
-                  </Button>
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1.5 text-xs"
+                      onClick={() => generatePdfReport(result)}
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      PDF
+                    </Button>
+                    {user && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1.5 text-xs"
+                        onClick={handleSaveVersion}
+                      >
+                        <Save className="w-3.5 h-3.5" />
+                        Save Version
+                      </Button>
+                    )}
+                  </>
                 )}
               </>
             )}
