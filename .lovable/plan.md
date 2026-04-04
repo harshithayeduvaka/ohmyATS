@@ -1,28 +1,23 @@
 
 
-# Add Logo to Website
+## Plan: Replace Canva Link with Uploaded Logo Asset
 
-## Summary
-Copy the uploaded logo image into the project and display it in three key locations: the sidebar header, the mobile header bar, and the dashboard page.
+The uploaded images (`oh_my_ATS_1.png` and `oh_my_ATS-3.png`) are the same logo with the megaphone + "OH MY ATS" text -- a proper transparent PNG. The sidebar and dashboard currently point to a broken Canva link instead of the local asset. AppLayout and About already use the local import correctly.
 
-## Steps
+### Steps
 
-1. **Copy logo asset** — Copy `user-uploads://2026-04-01_21-13-28.png` to `src/assets/logo.png`
+1. **Copy uploaded logo to `src/assets/logo.png`**
+   - Use `oh_my_ATS_1.png` (or `oh_my_ATS-3.png`, they appear identical) to replace `src/assets/logo.png`
+   - This is the single source of truth -- AppLayout and About already import from this path
 
-2. **Update Sidebar Header (`src/components/AppSidebar.tsx`)**
-   - Import the logo: `import logo from "@/assets/logo.png"`
-   - Replace the text-only branding (lines 71-77) with an `<img>` tag
-   - When collapsed: show a small ~28px version of the logo
-   - When expanded: show the logo at ~120px width
+2. **Update `src/components/AppSidebar.tsx` (line 73)**
+   - Change `src="https://canva.link/p5urf85754goya5"` back to `src={logo}` (the import on line 2 already exists)
+   - Add `bg-transparent` to ensure no background leaks
 
-3. **Update Mobile Header (`src/components/AppLayout.tsx`)**
-   - Import the logo and replace the `<span>oh my ATS</span>` text (line 12) with an `<img>` of the logo (~80px wide, visible on `md:hidden`)
+3. **Update `src/pages/Dashboard.tsx` (line 24)**
+   - Import logo: `import logoImg from "@/assets/logo.png"`
+   - Change `src="https://canva.link/p5urf85754goya5"` to `src={logoImg}`
+   - Add `bg-transparent` to className
 
-4. **Update Dashboard Hero (`src/pages/Dashboard.tsx`)**
-   - Optionally display the logo above the headline for brand reinforcement (~140px wide)
-
-## Technical Details
-- Logo imported as ES6 module from `src/assets/` for proper Vite bundling
-- Uses `object-contain` for consistent rendering across light/dark themes
-- For dark mode, apply `dark:invert` class since the logo is black-on-white line art
+All four logo locations (sidebar, dashboard, mobile header, about page) will then use the same local transparent PNG asset with `object-contain`, `bg-transparent`, and `dark:invert`.
 
