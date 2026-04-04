@@ -9,7 +9,7 @@ import { ScanResult } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Download, History, LayoutDashboard, ArrowLeft } from "lucide-react";
+import { Download, History, LayoutDashboard, ArrowLeft, Save } from "lucide-react";
 import { generatePdfReport } from "@/lib/pdfReport";
 import { Button } from "@/components/ui/button";
 
