@@ -21,7 +21,7 @@ const Dashboard = () => (
   <div className="min-h-screen bg-background">
     <section className="max-w-6xl mx-auto px-6 pt-10 pb-16">
       <div className="mb-10">
-        <img src="/9872a6cd-aac7-4e26-b17f-71664b0393da.png" alt="oh my ATS" className="w-[140px] object-contain dark:invert mb-4" />
+        <img src="/a8909471-b5b1-4218-a795-4c81ee808869.png" alt="oh my ATS" className="w-[140px] object-contain dark:invert mb-4" />
         <h1 className="text-4xl font-bold tracking-tight text-foreground leading-tight">
           Match your resume to any job description in seconds.
         </h1>
