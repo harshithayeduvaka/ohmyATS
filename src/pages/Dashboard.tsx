@@ -21,12 +21,11 @@ const Dashboard = () => (
   <div className="min-h-screen bg-background">
     <section className="max-w-6xl mx-auto px-6 pt-10 pb-16">
       <div className="mb-10">
-        <img src={logoImg} alt="oh my ATS" className="w-[140px] object-contain dark:invert mb-4" />
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground leading-tight">
-          Think, plan, and land<br />your dream job
+        <img src="/9872a6cd-aac7-4e26-b17f-71664b0393da.png" alt="oh my ATS" className="w-[140px] object-contain dark:invert mb-4" />
+        <h1 className="text-4xl font-bold tracking-tight text-foreground leading-tight">
+          Match your resume to any job description in seconds.
         </h1>
-        <p className="mt-3 text-muted-foreground max-w-lg">
-          Your AI-powered ecosystem for smarter job searching, resume optimization, and interview preparation.
+        <p className="font-normal">
         </p>
         <div className="mt-6 flex gap-3">
           <Link to="/scan" className="inline-flex items-center px-6 py-2.5 rounded-full bg-foreground text-background font-medium text-sm hover:opacity-90 transition-opacity">
