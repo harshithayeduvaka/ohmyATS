@@ -20,10 +20,10 @@ const ScanningState = ({ currentStep }: ScanningStateProps) => {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h2 className="text-lg font-semibold text-foreground">
-            Running Dual Scan
+            Running Ensemble Scan
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Bot Pass → Algorithm Ranking → Human Pass
+            Dual AI Engine → GPT-5 + Gemini Pro → Merged Analysis
           </p>
         </div>
 
