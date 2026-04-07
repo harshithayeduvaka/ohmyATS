@@ -2,9 +2,10 @@ const steps = [
   "Extracting contact fields...",
   "Parsing education blocks...",
   "Mapping work experience dates...",
-  "Running semantic keyword analysis...",
-  "Evaluating hard requirement matches...",
-  "Detecting phantom matches...",
+  "Running dual-model semantic analysis...",
+  "Cross-referencing with GPT-5 engine...",
+  "Cross-referencing with Gemini Pro engine...",
+  "Merging ensemble results...",
   "Assessing recruiter appeal...",
   "Generating actionable rewrites...",
 ];
