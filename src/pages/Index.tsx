@@ -64,7 +64,7 @@ const Index = () => {
         matchSummary: data.matchSummary || undefined,
       };
 
-      setScanStep(8);
+      setScanStep(10);
 
       // Save to history if logged in
       if (user) {
