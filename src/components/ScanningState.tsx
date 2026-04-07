@@ -2,9 +2,10 @@ const steps = [
   "Extracting contact fields...",
   "Parsing education blocks...",
   "Mapping work experience dates...",
-  "Running semantic keyword analysis...",
-  "Evaluating hard requirement matches...",
-  "Detecting phantom matches...",
+  "Running dual-model semantic analysis...",
+  "Cross-referencing with GPT-5 engine...",
+  "Cross-referencing with Gemini Pro engine...",
+  "Merging ensemble results...",
   "Assessing recruiter appeal...",
   "Generating actionable rewrites...",
 ];
@@ -19,10 +20,10 @@ const ScanningState = ({ currentStep }: ScanningStateProps) => {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h2 className="text-lg font-semibold text-foreground">
-            Running Dual Scan
+            Running Ensemble Scan
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Bot Pass → Algorithm Ranking → Human Pass
+            Dual AI Engine → GPT-5 + Gemini Pro → Merged Analysis
           </p>
         </div>
 
