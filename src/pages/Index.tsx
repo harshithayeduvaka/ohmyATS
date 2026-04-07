@@ -35,13 +35,13 @@ const Index = () => {
 
     const stepInterval = setInterval(() => {
       setScanStep((s) => {
-        if (s >= 7) {
+        if (s >= 9) {
           clearInterval(stepInterval);
-          return 7;
+          return 9;
         }
         return s + 1;
       });
-    }, 800);
+    }, 1200);
 
     try {
       const { data, error } = await supabase.functions.invoke("scan-cv", {
