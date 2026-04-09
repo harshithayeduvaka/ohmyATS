@@ -67,4 +67,5 @@ export interface ScanResult {
   keywordAnalysis: KeywordAnalysisItem[];
   sectionTips?: SectionTip[];
   matchSummary?: MatchSummary;
+  modelsUsed?: string[];
 }

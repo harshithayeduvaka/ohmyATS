@@ -417,20 +417,25 @@ serve(async (req) => {
     }
 
     let finalResult: any;
+    const modelsUsed: string[] = [];
 
     if (geminiOk && gptOk) {
-      // Both succeeded — merge for best accuracy
       console.log("Both models succeeded, merging results");
       finalResult = mergeResults(geminiOk, gptOk);
+      modelsUsed.push("Gemini 2.5 Pro", "GPT-5");
     } else if (geminiOk) {
       console.log("Only Gemini succeeded, using single result");
       finalResult = geminiOk;
+      modelsUsed.push("Gemini 2.5 Pro");
     } else if (gptOk) {
       console.log("Only GPT-5 succeeded, using single result");
       finalResult = gptOk;
+      modelsUsed.push("GPT-5");
     } else {
       throw new Error("Both AI models failed. Please try again.");
     }
+
+    finalResult.modelsUsed = modelsUsed;
 
     // Validate essential fields
     if (!finalResult.scores || typeof finalResult.scores.overall !== "number") {
