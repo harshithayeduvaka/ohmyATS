@@ -62,6 +62,7 @@ const Index = () => {
         keywordAnalysis: data.keywordAnalysis || [],
         sectionTips: data.sectionTips || [],
         matchSummary: data.matchSummary || undefined,
+        modelsUsed: data.modelsUsed || [],
       };
 
       setScanStep(10);
