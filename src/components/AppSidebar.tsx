@@ -4,7 +4,7 @@ import {
   Home, Search, FileText, MessageSquare, HelpCircle, History,
   FileSearch, Zap, Mail, Linkedin, ClipboardList, Building2,
   StickyNote, Globe, Mic, User, MessageCircle,
-  Info, Sparkles
+  Info, Sparkles, Settings
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarHeader, SidebarFooter,
@@ -51,14 +51,28 @@ const AppSidebar = () => {
     const isActive = location.pathname === item.href;
     return (
       <SidebarMenuItem key={item.href}>
-        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-          <Link to={item.href}>
-            <item.icon className="w-4 h-4" />
-            {!collapsed && <span>{item.title}</span>}
+        <SidebarMenuButton asChild isActive={false} tooltip={item.title}>
+          <Link
+            to={item.href}
+            className={`relative transition-all duration-200 ${
+              isActive
+                ? "bg-primary/8 text-foreground font-semibold"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            } ${!collapsed ? "rounded-lg mx-1" : ""}`}
+          >
+            {/* Active pill indicator */}
+            {isActive && !collapsed && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-primary" />
+            )}
+            {isActive && collapsed && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 rounded-full bg-primary" />
+            )}
+            <item.icon className={`w-4 h-4 transition-colors duration-200 ${isActive ? "text-primary" : ""}`} />
+            {!collapsed && <span className="text-[13px]">{item.title}</span>}
           </Link>
         </SidebarMenuButton>
         {item.badge && !collapsed && (
-          <SidebarMenuBadge className="bg-primary text-primary-foreground text-[10px] px-1.5 rounded-full">
+          <SidebarMenuBadge className="bg-primary/10 text-primary text-[10px] font-medium px-1.5 rounded-full">
             {item.badge}
           </SidebarMenuBadge>
         )}
@@ -67,7 +81,7 @@ const AppSidebar = () => {
   };
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="border-r border-border/40 bg-sidebar/80 backdrop-blur-xl">
       <SidebarHeader className="p-4">
         <Link to="/" className="flex items-center gap-2">
           <img src={logo} alt="oh my ATS" className={`object-contain bg-transparent dark:invert ${collapsed ? "w-7 h-7" : "w-[120px]"}`} />
@@ -81,31 +95,29 @@ const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarSeparator />
+        <SidebarSeparator className="opacity-40" />
 
         <SidebarGroup>
           {!collapsed && (
-            <SidebarGroupLabel className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5" /> AI TOOLS
+            <SidebarGroupLabel className="flex items-center gap-1.5 text-[11px] tracking-widest text-muted-foreground/60 font-medium uppercase">
+              <Sparkles className="w-3 h-3" /> AI Tools
             </SidebarGroupLabel>
           )}
           <SidebarGroupContent>
             <SidebarMenu>{aiTools.map(renderItem)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        <SidebarSeparator />
-
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>{bottomNav.map(renderItem)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className={`p-3 ${collapsed ? "flex flex-col items-center gap-2" : "flex flex-row items-center gap-2"}`}>
-        <ThemeToggle />
-        {!collapsed && <AuthButton />}
+      {/* Distinct bottom section */}
+      <SidebarFooter className="border-t border-border/30 pt-2">
+        <SidebarMenu>
+          {bottomNav.map(renderItem)}
+        </SidebarMenu>
+        <div className={`px-3 pb-3 pt-1 ${collapsed ? "flex flex-col items-center gap-2" : "flex flex-row items-center gap-2"}`}>
+          <ThemeToggle />
+          {!collapsed && <AuthButton />}
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
