@@ -1,52 +1,74 @@
 import { Link } from "react-router-dom";
-import { Search, FileText, MessageSquare, HelpCircle, History, FileSearch, Zap, Mail, Linkedin, ClipboardList, Building2, Mic, ArrowRight } from "lucide-react";
+import { Search, FileText, MessageSquare, HelpCircle, History, FileSearch, Zap, Mail, Linkedin, ClipboardList, Building2, Mic, ArrowRight, Shield } from "lucide-react";
 import logoImg from "@/assets/logo.png";
 
 const tools = [
-  { title: "Scan My Resume Now", description: "Analyse your resume against job descriptions for higher match rates.", icon: Search, href: "/scan", iconBg: "bg-purple-100 dark:bg-purple-900/30", iconColor: "text-purple-600 dark:text-purple-400" },
-  { title: "Cover Letter Generator", description: "Create tailored, compelling cover letters in seconds with AI.", icon: FileText, href: "/cover-letter", iconBg: "bg-emerald-100 dark:bg-emerald-900/30", iconColor: "text-emerald-600 dark:text-emerald-400" },
-  { title: "Interview Simulator", description: "Practice with real-time feedback and boost your confidence.", icon: MessageSquare, href: "/interview", iconBg: "bg-amber-100 dark:bg-amber-900/30", iconColor: "text-amber-600 dark:text-amber-400" },
-  { title: "Interview Q&A Bank", description: "Get likely interview questions with suggested answers.", icon: HelpCircle, href: "/interview-qa", iconBg: "bg-rose-100 dark:bg-rose-900/30", iconColor: "text-rose-600 dark:text-rose-400" },
-  { title: "Resume Versions", description: "Save multiple CV versions and track score improvements.", icon: History, href: "/versions", iconBg: "bg-blue-100 dark:bg-blue-900/30", iconColor: "text-blue-600 dark:text-blue-400" },
-  { title: "JD Optimiser", description: "Optimise job descriptions for ATS screening.", icon: FileSearch, href: "/jd-optimizer", iconBg: "bg-indigo-100 dark:bg-indigo-900/30", iconColor: "text-indigo-600 dark:text-indigo-400" },
-  { title: "Keyword Analyser", description: "Extract ATS keywords from any job description.", icon: Zap, href: "/keywords", iconBg: "bg-cyan-100 dark:bg-cyan-900/30", iconColor: "text-cyan-600 dark:text-cyan-400" },
-  { title: "Cold Outreach", description: "Generate personalised cold emails & LinkedIn messages.", icon: Mail, href: "/cold-outreach", iconBg: "bg-orange-100 dark:bg-orange-900/30", iconColor: "text-orange-600 dark:text-orange-400" },
-  { title: "LinkedIn Coach", description: "Analyse & optimise your LinkedIn profile.", icon: Linkedin, href: "/linkedin", iconBg: "bg-sky-100 dark:bg-sky-900/30", iconColor: "text-sky-600 dark:text-sky-400" },
-  { title: "Elevator Pitch", description: "Generate a compelling pitch from your CV in seconds.", icon: Mic, href: "/elevator-pitch", iconBg: "bg-pink-100 dark:bg-pink-900/30", iconColor: "text-pink-600 dark:text-pink-400" },
-  { title: "Job Tracker", description: "Track all your applications and follow-ups.", icon: ClipboardList, href: "/tracker", iconBg: "bg-teal-100 dark:bg-teal-900/30", iconColor: "text-teal-600 dark:text-teal-400" },
-  { title: "Company Contacts", description: "Store company details, contacts & LinkedIn profiles.", icon: Building2, href: "/contacts", iconBg: "bg-violet-100 dark:bg-violet-900/30", iconColor: "text-violet-600 dark:text-violet-400" },
+  { title: "Scan My Resume Now", description: "Analyse your resume against job descriptions for higher match rates.", icon: Search, href: "/scan" },
+  { title: "Cover Letter Generator", description: "Create tailored, compelling cover letters in seconds with AI.", icon: FileText, href: "/cover-letter" },
+  { title: "Interview Simulator", description: "Practice with real-time feedback and boost your confidence.", icon: MessageSquare, href: "/interview" },
+  { title: "Interview Q&A Bank", description: "Get likely interview questions with suggested answers.", icon: HelpCircle, href: "/interview-qa" },
+  { title: "Resume Versions", description: "Save multiple CV versions and track score improvements.", icon: History, href: "/versions" },
+  { title: "JD Optimiser", description: "Optimise job descriptions for ATS screening.", icon: FileSearch, href: "/jd-optimizer" },
+  { title: "Keyword Analyser", description: "Extract ATS keywords from any job description.", icon: Zap, href: "/keywords" },
+  { title: "Cold Outreach", description: "Generate personalised cold emails & LinkedIn messages.", icon: Mail, href: "/cold-outreach" },
+  { title: "LinkedIn Coach", description: "Analyse & optimise your LinkedIn profile.", icon: Linkedin, href: "/linkedin" },
+  { title: "Elevator Pitch", description: "Generate a compelling pitch from your CV in seconds.", icon: Mic, href: "/elevator-pitch" },
+  { title: "Job Tracker", description: "Track all your applications and follow-ups.", icon: ClipboardList, href: "/tracker" },
+  { title: "Company Contacts", description: "Store company details, contacts & LinkedIn profiles.", icon: Building2, href: "/contacts" },
 ];
 
 const Dashboard = () => (
-  <div className="min-h-screen bg-background">
-    <section className="max-w-6xl mx-auto px-6 pt-10 pb-16">
-      <div className="mb-10">
-        <img src={logoImg} alt="oh my ATS" className="w-[140px] object-contain bg-transparent dark:invert mb-4" />
-        <h1 className="text-4xl font-bold tracking-tight text-foreground leading-tight">
-          Match your resume to any job description in seconds.
+  <div className="min-h-screen bg-background relative overflow-hidden">
+    {/* Decorative blobs */}
+    <div className="absolute top-[-120px] right-[-80px] w-[400px] h-[400px] rounded-full bg-primary/5 animate-blob blur-3xl pointer-events-none" />
+    <div className="absolute bottom-[-100px] left-[-60px] w-[300px] h-[300px] rounded-full bg-accent/5 animate-blob blur-3xl pointer-events-none" style={{ animationDelay: "2s" }} />
+
+    <section className="max-w-6xl mx-auto px-6 pt-10 pb-16 relative z-10">
+      <div className="mb-12 animate-slide-up">
+        <img src={logoImg} alt="oh my ATS" className="w-[140px] object-contain bg-transparent dark:invert mb-5" />
+        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight">
+          <span className="text-foreground">Match your resume to any</span>
+          <br />
+          <span className="gradient-text">job description in seconds.</span>
         </h1>
-        <h2 className="mt-2 text-sm font-normal font-sans text-muted-foreground">
-          Highly qualified but still getting the auto-reject email?
-        </h2>
-        <div className="mt-6 flex gap-3">
-          <Link to="/scan" className="inline-flex items-center px-6 py-2.5 rounded-full bg-foreground text-background font-medium text-sm hover:opacity-90 transition-opacity">
+        <p className="mt-3 text-base text-muted-foreground max-w-lg">
+          Highly qualified but still getting the auto-reject email? Our ensemble AI engine scans your CV through dual models for maximum accuracy.
+        </p>
+        <div className="mt-7 flex gap-3">
+          <Link
+            to="/scan"
+            className="inline-flex items-center px-7 py-3 rounded-full gradient-bg text-primary-foreground font-semibold text-sm hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0"
+          >
             Get Started
+            <ArrowRight className="w-4 h-4 ml-2" />
           </Link>
-          <Link to="/about" className="inline-flex items-center px-6 py-2.5 rounded-full border border-border text-foreground font-medium text-sm hover:bg-muted/50 transition-colors">
+          <Link
+            to="/about"
+            className="inline-flex items-center px-7 py-3 rounded-full border border-border text-foreground font-medium text-sm hover:bg-secondary transition-colors duration-200"
+          >
             About
           </Link>
+        </div>
+        <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+          <Shield className="w-3.5 h-3.5 text-primary" />
+          <span>GDPR compliant · End-to-end encrypted · Your data stays yours</span>
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {tools.map((tool) => (
-          <Link key={tool.href} to={tool.href} className="group p-5 rounded-2xl bg-card border border-border/60 hover:shadow-lg hover:border-border transition-all duration-300">
-            <div className={`w-10 h-10 rounded-xl ${tool.iconBg} flex items-center justify-center mb-3`}>
-              <tool.icon className={`w-5 h-5 ${tool.iconColor}`} />
+        {tools.map((tool, i) => (
+          <Link
+            key={tool.href}
+            to={tool.href}
+            className="group relative p-5 rounded-2xl glass-card hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300 hover:-translate-y-1 animate-slide-up"
+            style={{ animationDelay: `${80 + i * 50}ms` }}
+          >
+            <div className="w-10 h-10 rounded-xl gradient-bg-soft flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+              <tool.icon className="w-5 h-5 text-primary" />
             </div>
             <h3 className="text-base text-foreground mb-1 flex items-center gap-2 font-bold">
               {tool.title}
-              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" />
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{tool.description}</p>
           </Link>
