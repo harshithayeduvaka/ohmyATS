@@ -99,7 +99,7 @@ Return ONLY valid JSON:
           },
           {
             role: "user",
-            content: `Recipient: ${recipientName}\nRole: ${recipientRole || "Hiring Manager"}\nCompany: ${companyName}\nChannel: ${channelType}\nTone: ${toneType}\nOutput Language: ${lang}${cv ? `\n\nMy CV:\n${cv}` : ""}${jd ? `\n\nJob Description:\n${jd}` : ""}`
+            content: `Recipient: ${recipientName}\nRole: ${recipientRole || "Hiring Manager"}\nCompany: ${companyName}\nChannel: ${channelType}\nTone: ${toneType}\nOutput Language: ${lang}${cv ? `\n\nMy CV:\n${cv}` : ""}${jd ? `\n\nJob Description:\n${jd}` : ""}${companyResearch ? `\n\nCompany Research (use to personalize the WHERE-I-FIT and WHY-GREAT-FIT pillars):\n${companyResearch}` : ""}`
           }
         ],
       }),
