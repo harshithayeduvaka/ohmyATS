@@ -12,6 +12,8 @@ const ColdOutreach = () => {
   const [recipientName, setRecipientName] = useState("");
   const [recipientRole, setRecipientRole] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [companyUrl, setCompanyUrl] = useState("");
+  const [autoResearch, setAutoResearch] = useState(true);
   const [cv, setCv] = useState("");
   const [jd, setJd] = useState("");
   const [channel, setChannel] = useState<"email" | "linkedin">("email");
@@ -28,7 +30,7 @@ const ColdOutreach = () => {
     setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("generate-cold-outreach", {
-        body: { cv: cv.trim() || undefined, jd: jd.trim() || undefined, recipientName, recipientRole, companyName, channel, tone, language },
+        body: { cv: cv.trim() || undefined, jd: jd.trim() || undefined, recipientName, recipientRole, companyName, companyUrl: companyUrl.trim() || undefined, autoResearch, channel, tone, language },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -99,6 +101,18 @@ const ColdOutreach = () => {
           </div>
         </div>
 
+        {/* Company research */}
+        <div className="grid gap-4 md:grid-cols-[1fr_auto] items-end">
+          <div>
+            <label className="text-sm font-medium text-foreground mb-1.5 block">Company URL (optional)</label>
+            <Input value={companyUrl} onChange={(e) => setCompanyUrl(e.target.value)} placeholder="https://company.com or specific page (about, careers, blog)" />
+          </div>
+          <label className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm cursor-pointer select-none">
+            <input type="checkbox" checked={autoResearch} onChange={(e) => setAutoResearch(e.target.checked)} className="accent-primary" />
+            Auto-research company
+          </label>
+        </div>
+
         {/* Optional Context */}
         <div className="grid gap-4 md:grid-cols-2">
           <div>
@@ -147,6 +161,22 @@ const ColdOutreach = () => {
               </div>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{result.message}</p>
             </div>
+
+            {/* Pitch pillars covered */}
+            {result.pillarsCovered && (
+              <div className="grid gap-3 md:grid-cols-3">
+                {[
+                  { label: "Where I Fit", value: result.pillarsCovered.fit },
+                  { label: "Value I Add", value: result.pillarsCovered.value },
+                  { label: "Why I'm a Great Fit", value: result.pillarsCovered.whyGreat },
+                ].map((p) => (
+                  <div key={p.label} className="p-3 rounded-lg border border-primary/20 bg-primary/5">
+                    <div className="text-[10px] uppercase tracking-widest text-primary font-semibold mb-1">{p.label}</div>
+                    <div className="text-xs text-foreground/80">{p.value}</div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Follow-up */}
             {result.followUp && (

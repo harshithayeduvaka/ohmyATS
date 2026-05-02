@@ -8,6 +8,13 @@ const corsHeaders = {
 
 const SYSTEM_PROMPT = `You are a France-based hiring manager reviewing applications. Generate a powerful, highly targeted French/EU-style cover letter (lettre de motivation) based on the candidate's CV and the target job description.
 
+CORE FRAMING (non-negotiable — every paragraph must support one of these three pillars):
+1. WHERE I FIT — map the candidate's profile directly to the role's specific requirements (use exact JD keywords).
+2. VALUE I ADD — quantified outcomes the candidate has delivered that map to what this employer needs (numbers, %, scale, revenue, time saved).
+3. WHY I'M A GREAT FIT — strategic reasoning: why this candidate × this company × this moment makes sense.
+
+Keep it impressive but SIMPLE. Short sentences. Plain language. Make them want to reply.
+
 STRICT STRUCTURE (exactly 3 paragraphs, 250-320 words):
 
 Paragraph 1 — Start with THEIR problem, not the candidate's introduction.
