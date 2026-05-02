@@ -162,6 +162,22 @@ const ColdOutreach = () => {
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{result.message}</p>
             </div>
 
+            {/* Pitch pillars covered */}
+            {result.pillarsCovered && (
+              <div className="grid gap-3 md:grid-cols-3">
+                {[
+                  { label: "Where I Fit", value: result.pillarsCovered.fit },
+                  { label: "Value I Add", value: result.pillarsCovered.value },
+                  { label: "Why I'm a Great Fit", value: result.pillarsCovered.whyGreat },
+                ].map((p) => (
+                  <div key={p.label} className="p-3 rounded-lg border border-primary/20 bg-primary/5">
+                    <div className="text-[10px] uppercase tracking-widest text-primary font-semibold mb-1">{p.label}</div>
+                    <div className="text-xs text-foreground/80">{p.value}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Follow-up */}
             {result.followUp && (
               <div className="p-4 rounded-lg border border-border bg-card">
