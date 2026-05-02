@@ -101,6 +101,18 @@ const ColdOutreach = () => {
           </div>
         </div>
 
+        {/* Company research */}
+        <div className="grid gap-4 md:grid-cols-[1fr_auto] items-end">
+          <div>
+            <label className="text-sm font-medium text-foreground mb-1.5 block">Company URL (optional)</label>
+            <Input value={companyUrl} onChange={(e) => setCompanyUrl(e.target.value)} placeholder="https://company.com or specific page (about, careers, blog)" />
+          </div>
+          <label className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm cursor-pointer select-none">
+            <input type="checkbox" checked={autoResearch} onChange={(e) => setAutoResearch(e.target.checked)} className="accent-primary" />
+            Auto-research company
+          </label>
+        </div>
+
         {/* Optional Context */}
         <div className="grid gap-4 md:grid-cols-2">
           <div>
