@@ -4,7 +4,7 @@ import {
   Home, Search, FileText, MessageSquare, HelpCircle, History,
   FileSearch, Zap, Mail, Linkedin, ClipboardList, Building2,
   StickyNote, Globe, Mic, User, MessageCircle,
-  Info, Sparkles, Settings
+  Info, Sparkles, Settings, Target
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarHeader, SidebarFooter,
@@ -18,6 +18,7 @@ import AuthButton from "@/components/AuthButton";
 const mainNav = [
   { title: "Home", icon: Home, href: "/" },
   { title: "Job Tracker", icon: ClipboardList, href: "/tracker" },
+  { title: "Targets", icon: Target, href: "/targets", badge: "New" },
   { title: "ATS Scanner", icon: Search, href: "/scan" },
   { title: "Resumes", icon: History, href: "/versions" },
   { title: "Notes", icon: StickyNote, href: "/notes", badge: "New" },
