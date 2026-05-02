@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { cv, jd, recipientName, recipientRole, companyName, channel, tone, language } = await req.json();
+    const { cv, jd, recipientName, recipientRole, companyName, channel, tone, language, companyUrl, autoResearch } = await req.json();
     if (!companyName || !recipientName) return new Response(JSON.stringify({ error: "Company name and recipient name are required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -24,6 +24,41 @@ serve(async (req) => {
     const langInstruction = language === "french"
       ? `\n\nIMPORTANT: Write ALL output text (subject, message, connectionNote, followUp, tips) in French.`
       : "";
+
+    // ===== Optional: scrape/search the company for personalization =====
+    let companyResearch = "";
+    const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
+    if (autoResearch && FIRECRAWL_API_KEY) {
+      try {
+        if (companyUrl) {
+          const scrapeRes = await fetch("https://api.firecrawl.dev/v2/scrape", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ url: companyUrl, formats: ["markdown", "summary"], onlyMainContent: true }),
+          });
+          if (scrapeRes.ok) {
+            const sd = await scrapeRes.json();
+            const md = sd?.data?.markdown || sd?.markdown || "";
+            const sum = sd?.data?.summary || sd?.summary || "";
+            companyResearch = (sum + "\n\n" + md).slice(0, 4000);
+          }
+        }
+        if (!companyResearch) {
+          const searchRes = await fetch("https://api.firecrawl.dev/v2/search", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ query: `${companyName} company recent news mission ${recipientRole || ""}`, limit: 4 }),
+          });
+          if (searchRes.ok) {
+            const sd = await searchRes.json();
+            const results = sd?.data || sd?.web?.results || [];
+            companyResearch = results.slice(0, 4).map((r: any) => `- ${r.title}: ${r.description || r.snippet || ""}`).join("\n").slice(0, 3000);
+          }
+        }
+      } catch (err) {
+        console.warn("Firecrawl research failed, continuing without it:", err);
+      }
+    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
