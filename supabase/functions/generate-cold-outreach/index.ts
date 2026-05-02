@@ -37,23 +37,29 @@ serve(async (req) => {
             role: "system",
             content: `You are an expert cold outreach copywriter. Generate a compelling ${channelType === "linkedin" ? "LinkedIn message" : "cold email"} that is ${toneType} in tone.
 
+CORE PITCH FRAMING (build the message around these 3 pillars in order):
+1. WHERE I FIT — show you understand their needs and pinpoint exactly where your profile maps to their requirements.
+2. VALUE I ADD — one crisp line with a quantified outcome you've delivered (numbers, %, scale, revenue, time saved).
+3. WHY I'M A GREAT FIT — one strategic line on why you × this company × this moment makes sense.
+
 Rules:
-- Keep it concise (${channelType === "linkedin" ? "under 300 characters for connection request, under 500 for InMail" : "under 150 words for email body"})
-- Personalize based on the recipient's role and company
-- Include a clear value proposition
-- End with a soft CTA (not aggressive)
-- Sound human, not templated
-${cv ? "- Reference specific achievements from the CV that are relevant" : ""}
-${jd ? "- Align with the job description requirements" : ""}
+- Keep it impressive but SIMPLE. Short sentences. Plain language. Designed to get a reply.
+- ${channelType === "linkedin" ? "Connection note under 300 characters; main message under 120 words" : "Email body under 130 words"}
+- Personalize based on the recipient's role and company${companyResearch ? " AND the company research provided below" : ""}
+- Soft, specific CTA (15-min chat, intro, feedback) — never aggressive
+- Sound human, not templated. No "I hope this finds you well." No "I am writing to..."
+${cv ? "- Reference 1 specific achievement from the CV that maps to their needs" : ""}
+${jd ? "- Mirror 2-3 exact keywords from the JD" : ""}
 
 Return ONLY valid JSON:
 {
-  "subject": "email subject line (only for email channel)",
-  "message": "the full message body",
+  "subject": "email subject line (only for email channel) — under 50 chars, curiosity-driven",
+  "message": "the full message body following the 3-pillar framing",
   "connectionNote": "short LinkedIn connection request note (only for linkedin channel)",
-  "followUp": "a follow-up message to send if no response after 5 days",
+  "followUp": "a follow-up message to send if no response after 5 days — even shorter, restate value",
   "tips": ["tips for improving response rate"],
-  "personalizationHooks": ["specific personalization points used"]
+  "personalizationHooks": ["specific personalization points used"],
+  "pillarsCovered": { "fit": "one-line where-I-fit summary", "value": "one-line value-I-add summary", "whyGreat": "one-line why-great-fit summary" }
 }${langInstruction}`
           },
           {
