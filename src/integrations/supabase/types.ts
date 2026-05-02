@@ -206,6 +206,54 @@ export type Database = {
         }
         Relationships: []
       }
+      targeted_companies: {
+        Row: {
+          careers_url: string | null
+          company_name: string
+          created_at: string
+          id: string
+          last_scanned_at: string | null
+          notes: string | null
+          preferred_job_type: string | null
+          preferred_keywords: string | null
+          preferred_location: string | null
+          profession: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          careers_url?: string | null
+          company_name: string
+          created_at?: string
+          id?: string
+          last_scanned_at?: string | null
+          notes?: string | null
+          preferred_job_type?: string | null
+          preferred_keywords?: string | null
+          preferred_location?: string | null
+          profession?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          careers_url?: string | null
+          company_name?: string
+          created_at?: string
+          id?: string
+          last_scanned_at?: string | null
+          notes?: string | null
+          preferred_job_type?: string | null
+          preferred_keywords?: string | null
+          preferred_location?: string | null
+          profession?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
