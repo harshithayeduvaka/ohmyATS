@@ -26,3 +26,7 @@ verify_jwt = false
 
 [functions.chat-with-scan]
 verify_jwt = false
+
+[functions.find-jobs]
+verify_jwt = false
+
