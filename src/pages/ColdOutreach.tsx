@@ -12,6 +12,8 @@ const ColdOutreach = () => {
   const [recipientName, setRecipientName] = useState("");
   const [recipientRole, setRecipientRole] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [companyUrl, setCompanyUrl] = useState("");
+  const [autoResearch, setAutoResearch] = useState(true);
   const [cv, setCv] = useState("");
   const [jd, setJd] = useState("");
   const [channel, setChannel] = useState<"email" | "linkedin">("email");
@@ -28,7 +30,7 @@ const ColdOutreach = () => {
     setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("generate-cold-outreach", {
-        body: { cv: cv.trim() || undefined, jd: jd.trim() || undefined, recipientName, recipientRole, companyName, channel, tone, language },
+        body: { cv: cv.trim() || undefined, jd: jd.trim() || undefined, recipientName, recipientRole, companyName, companyUrl: companyUrl.trim() || undefined, autoResearch, channel, tone, language },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
