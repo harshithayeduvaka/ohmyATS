@@ -50,10 +50,6 @@ const Dashboard = () => (
             About
           </Link>
         </div>
-        <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-          <Shield className="w-3.5 h-3.5 text-primary" />
-          <span>GDPR compliant · End-to-end encrypted · Your data stays yours</span>
-        </div>
       </div>
 
       {/* Bento Grid */}

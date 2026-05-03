@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Plus, Trash2, ExternalLink, Save } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, ExternalLink, Save, Upload, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -49,6 +50,52 @@ const CompanyContacts = () => {
   const { toast } = useToast();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const downloadTemplate = () => {
+    const headers = [["company","industry","website","ceo_name","ceo_email","ceo_linkedin","marketing_head_name","marketing_head_email","marketing_head_linkedin","hr_head_name","hr_head_email","hr_head_linkedin","notes"]];
+    const ws = XLSX.utils.aoa_to_sheet(headers);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Contacts");
+    XLSX.writeFile(wb, "company_contacts_template.xlsx");
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf);
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+      const valid = rows.filter(r => (r.company || r.Company || "").toString().trim());
+      if (!valid.length) { toast({ title: "No valid rows found", variant: "destructive" }); return; }
+      const payload = valid.map(r => ({
+        user_id: user.id,
+        company: (r.company ?? r.Company ?? "").toString().trim(),
+        industry: (r.industry ?? r.Industry ?? "").toString(),
+        website: (r.website ?? r.Website ?? "").toString(),
+        ceo_name: (r.ceo_name ?? "").toString(),
+        ceo_email: (r.ceo_email ?? "").toString(),
+        ceo_linkedin: (r.ceo_linkedin ?? "").toString(),
+        marketing_head_name: (r.marketing_head_name ?? "").toString(),
+        marketing_head_email: (r.marketing_head_email ?? "").toString(),
+        marketing_head_linkedin: (r.marketing_head_linkedin ?? "").toString(),
+        hr_head_name: (r.hr_head_name ?? "").toString(),
+        hr_head_email: (r.hr_head_email ?? "").toString(),
+        hr_head_linkedin: (r.hr_head_linkedin ?? "").toString(),
+        notes: (r.notes ?? "").toString(),
+      }));
+      const { error } = await supabase.from("company_contacts").insert(payload);
+      if (error) throw error;
+      toast({ title: `Imported ${payload.length} contacts` });
+      fetchContacts();
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   useEffect(() => {
     if (user) fetchContacts();
@@ -138,7 +185,16 @@ const CompanyContacts = () => {
       </header>
 
       <main className="max-w-full mx-auto px-4 py-6 space-y-4">
-        <Button onClick={addRow}><Plus className="w-4 h-4 mr-2" /> Add Company</Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button onClick={addRow}><Plus className="w-4 h-4 mr-2" /> Add Company</Button>
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+            <Upload className="w-4 h-4 mr-2" /> Upload Excel
+          </Button>
+          <Button variant="ghost" onClick={downloadTemplate}>
+            <Download className="w-4 h-4 mr-2" /> Template
+          </Button>
+          <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleUpload} className="hidden" />
+        </div>
 
         {loading ? (
           <p className="text-muted-foreground text-center py-12">Loading...</p>
