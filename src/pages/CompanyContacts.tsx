@@ -185,7 +185,16 @@ const CompanyContacts = () => {
       </header>
 
       <main className="max-w-full mx-auto px-4 py-6 space-y-4">
-        <Button onClick={addRow}><Plus className="w-4 h-4 mr-2" /> Add Company</Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button onClick={addRow}><Plus className="w-4 h-4 mr-2" /> Add Company</Button>
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+            <Upload className="w-4 h-4 mr-2" /> Upload Excel
+          </Button>
+          <Button variant="ghost" onClick={downloadTemplate}>
+            <Download className="w-4 h-4 mr-2" /> Template
+          </Button>
+          <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleUpload} className="hidden" />
+        </div>
 
         {loading ? (
           <p className="text-muted-foreground text-center py-12">Loading...</p>
