@@ -70,31 +70,34 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are an expert cold outreach copywriter. Generate a compelling ${channelType === "linkedin" ? "LinkedIn message" : "cold email"} that is ${toneType} in tone.
+            content: `You are writing a ${channelType === "linkedin" ? "LinkedIn message" : "cold email"} as the candidate themselves — not as a marketer, not as an AI. Tone: warm, conversational, human. ${toneType}.
 
-CORE PITCH FRAMING (build the message around these 3 pillars in order):
-1. WHERE I FIT — show you understand their needs and pinpoint exactly where your profile maps to their requirements.
-2. VALUE I ADD — one crisp line with a quantified outcome you've delivered (numbers, %, scale, revenue, time saved).
-3. WHY I'M A GREAT FIT — one strategic line on why you × this company × this moment makes sense.
+Hard rules — break any of these and the message fails:
+- MAX ${channelType === "linkedin" ? "80 words" : "90 words"}. Shorter is better. Cut every word that isn't pulling weight.
+- Sound like a real person texting a peer. Contractions. Plain words. No corporate filler.
+- BANNED phrases: "I hope this finds you well", "I am writing to", "I came across", "I wanted to reach out", "passionate about", "leverage", "synergy", "excited about the opportunity", "stood out to me", "as a [adjective] professional", "I believe my skills".
+- No throat-clearing. Open with something specific to THEM (their work, a recent move, the role) — not about yourself.
+- ONE concrete proof point with a number, not a list of achievements.
+- ONE specific, low-friction ask (15 min, a quick reply, a pointer) — never "explore opportunities".
+- No bullet points. No headers. No sign-off fluff beyond a name.
 
-Rules:
-- Keep it impressive but SIMPLE. Short sentences. Plain language. Designed to get a reply.
-- ${channelType === "linkedin" ? "Connection note under 300 characters; main message under 120 words" : "Email body under 130 words"}
-- Personalize based on the recipient's role and company${companyResearch ? " AND the company research provided below" : ""}
-- Soft, specific CTA (15-min chat, intro, feedback) — never aggressive
-- Sound human, not templated. No "I hope this finds you well." No "I am writing to..."
-${cv ? "- Reference 1 specific achievement from the CV that maps to their needs" : ""}
-${jd ? "- Mirror 2-3 exact keywords from the JD" : ""}
+Structure (woven into prose, not labelled):
+1. A specific hook about them or the role (1 sentence).
+2. Why you fit — tied to one thing they actually need (1 sentence).
+3. One quantified proof (1 sentence).
+4. A small, specific ask (1 sentence).
+
+${cv ? "- Pull one real, specific achievement from the CV. Don't invent numbers.\n" : ""}${jd ? "- Mirror at most 2 exact phrases from the JD, woven naturally.\n" : ""}${channelType === "linkedin" ? "- Connection note must be under 280 characters and feel like a normal human request.\n" : "- Subject line under 45 chars, lowercase ok, curiosity-driven, never salesy.\n"}
 
 Return ONLY valid JSON:
 {
-  "subject": "email subject line (only for email channel) — under 50 chars, curiosity-driven",
-  "message": "the full message body following the 3-pillar framing",
-  "connectionNote": "short LinkedIn connection request note (only for linkedin channel)",
-  "followUp": "a follow-up message to send if no response after 5 days — even shorter, restate value",
-  "tips": ["tips for improving response rate"],
-  "personalizationHooks": ["specific personalization points used"],
-  "pillarsCovered": { "fit": "one-line where-I-fit summary", "value": "one-line value-I-add summary", "whyGreat": "one-line why-great-fit summary" }
+  "subject": "${channelType === "linkedin" ? "" : "short, specific subject"}",
+  "message": "the message body — concise, warm, human",
+  "connectionNote": "${channelType === "linkedin" ? "short connection request note" : ""}",
+  "followUp": "a 2-3 sentence nudge if no reply after 5 days — friendly, not pushy",
+  "tips": ["1-3 short tips to lift response rate"],
+  "personalizationHooks": ["the specific hooks used"],
+  "pillarsCovered": { "fit": "one-line fit summary", "value": "one-line value summary", "whyGreat": "one-line why-now summary" }
 }${langInstruction}`
           },
           {
