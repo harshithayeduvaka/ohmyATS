@@ -74,42 +74,6 @@ export type Database = {
         }
         Relationships: []
       }
-      job_alerts: {
-        Row: {
-          active: boolean
-          careers_url: string
-          company_name: string
-          created_at: string
-          id: string
-          keywords: string | null
-          last_checked_at: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          active?: boolean
-          careers_url: string
-          company_name: string
-          created_at?: string
-          id?: string
-          keywords?: string | null
-          last_checked_at?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          active?: boolean
-          careers_url?: string
-          company_name?: string
-          created_at?: string
-          id?: string
-          keywords?: string | null
-          last_checked_at?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       job_applications: {
         Row: {
           applied_date: string | null
@@ -181,50 +145,6 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
-      }
-      job_notifications: {
-        Row: {
-          alert_id: string
-          company_name: string
-          created_at: string
-          id: string
-          job_title: string
-          job_url: string
-          location: string | null
-          read: boolean
-          user_id: string
-        }
-        Insert: {
-          alert_id: string
-          company_name: string
-          created_at?: string
-          id?: string
-          job_title: string
-          job_url: string
-          location?: string | null
-          read?: boolean
-          user_id: string
-        }
-        Update: {
-          alert_id?: string
-          company_name?: string
-          created_at?: string
-          id?: string
-          job_title?: string
-          job_url?: string
-          location?: string | null
-          read?: boolean
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "job_notifications_alert_id_fkey"
-            columns: ["alert_id"]
-            isOneToOne: false
-            referencedRelation: "job_alerts"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       resume_versions: {
         Row: {
