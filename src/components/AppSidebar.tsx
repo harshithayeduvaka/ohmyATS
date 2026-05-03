@@ -18,7 +18,7 @@ import AuthButton from "@/components/AuthButton";
 const mainNav = [
   { title: "Home", icon: Home, href: "/" },
   { title: "Job Tracker", icon: ClipboardList, href: "/tracker" },
-  { title: "Targets", icon: Target, href: "/targets", badge: "New" },
+  { title: "Job Alerts", icon: Target, href: "/job-alerts", badge: "New" },
   { title: "ATS Scanner", icon: Search, href: "/scan" },
   { title: "Resumes", icon: History, href: "/versions" },
   { title: "Notes", icon: StickyNote, href: "/notes", badge: "New" },
