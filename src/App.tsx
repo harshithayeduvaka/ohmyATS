@@ -50,7 +50,7 @@ const App = () => (
                 <Route path="/cold-outreach" element={<ColdOutreach />} />
                 <Route path="/linkedin" element={<LinkedInAnalyzer />} />
                 <Route path="/tracker" element={<JobTracker />} />
-                <Route path="/targets" element={<TargetedCompanies />} />
+                <Route path="/job-alerts" element={<JobAlerts />} />
                 <Route path="/contacts" element={<CompanyContacts />} />
                 <Route path="/notes" element={<Notes />} />
                 <Route path="/portfolio" element={<Portfolio />} />
