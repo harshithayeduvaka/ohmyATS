@@ -17,7 +17,7 @@ import KeywordAnalyzer from "./pages/KeywordAnalyzer.tsx";
 import ColdOutreach from "./pages/ColdOutreach.tsx";
 import LinkedInAnalyzer from "./pages/LinkedInAnalyzer.tsx";
 import JobTracker from "./pages/JobTracker.tsx";
-import TargetedCompanies from "./pages/TargetedCompanies.tsx";
+import JobAlerts from "./pages/JobAlerts.tsx";
 import CompanyContacts from "./pages/CompanyContacts.tsx";
 import Notes from "./pages/Notes.tsx";
 import Portfolio from "./pages/Portfolio.tsx";
