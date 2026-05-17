@@ -1,0 +1,31 @@
+# Made for ATS
+
+> AI-powered CV scanner, cover letter generator, and job search toolkit built for SKEMA Business School students and EU professionals.
+
+Made for ATS helps students and professionals land more interviews by optimising CVs for Applicant Tracking Systems (ATS). It runs dual-model AI scans that score CVs against job descriptions, generates tailored cover letters in English and French, builds LinkedIn profiles, creates cold outreach messages, and tracks job applications end-to-end.
+
+## Pages
+
+- [Dashboard](/): Overview of all tools and recent activity.
+- [CV Scanner](/scan): Paste your CV and job description to get a brutally honest ATS match score with section-by-section feedback and AI rewrites.
+- [Cover Letter Generator](/cover-letter): Generate tailored 3-paragraph cover letters in English or French, optimised for French and EU professional standards.
+- [Interview Simulator](/interview): Practise interviews with an AI coach that evaluates your answers and gives feedback grounded in your CV and target role.
+- [Interview Q&A](/interview-qa): Get custom interview questions and model answers based on the company, sector, and interview type.
+- [CV Version History](/versions): Track every iteration of your CV with automated AI saves and manual entries to compare changes over time.
+- [Job Description Optimiser](/jd-optimizer): Refine job descriptions and surface the keywords, skills, and signals that drive ATS matching.
+- [Keyword Analyser](/keywords): Identify trending and missing keywords between your CV and the target job description for stronger ATS scoring.
+- [Cold Outreach](/cold-outreach): Write warm, concise outreach messages that pitch your fit, value, and credibility in under 90 words.
+- [LinkedIn Coach](/linkedin): Audit your LinkedIn profile, estimate your SSI, and get copy-paste fixes for headline, About, and experience.
+- [Job Application Tracker](/tracker): Track CDI, CDD, internship, and freelance applications across stages with a visual board built for job seekers.
+- [Company Contacts](/contacts): Manage CEOs, HR, and Marketing leads in a spreadsheet-style directory with bulk Excel import.
+- [Notes](/notes): Capture company research, interview notes, and follow-up reminders in one organised workspace.
+- [Portfolio](/portfolio): Showcase your projects and case studies in a portfolio tailored to your target roles.
+- [Elevator Pitch](/elevator-pitch): Generate 30, 60, and 90-second elevator pitches grounded in your CV and target role.
+- [Profile](/profile): Manage your account, CV, and preferences for the Made for ATS toolkit.
+- [Support](/support): Get help with the Made for ATS toolkit, from CV scanning to interview prep.
+- [About](/about): Made for ATS is an AI-powered job-search toolkit built for SKEMA Business School students and EU professionals.
+
+## Optional
+
+- [Sitemap](/sitemap.xml): XML sitemap for search engine indexing.
+- [Robots](/robots.txt): Crawler directives for search engines.
