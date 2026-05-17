@@ -100,7 +100,7 @@ const AppSidebar = () => {
 
         <SidebarGroup>
           {!collapsed && (
-            <SidebarGroupLabel className="flex items-center gap-1.5 text-[11px] tracking-widest text-muted-foreground/60 font-medium uppercase">
+            <SidebarGroupLabel className="flex items-center gap-1.5 text-[11px] tracking-widest text-muted-foreground font-semibold uppercase">
               <Sparkles className="w-3 h-3" /> AI Tools
             </SidebarGroupLabel>
           )}
