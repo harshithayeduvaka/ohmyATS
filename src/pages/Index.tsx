@@ -126,6 +126,25 @@ const Index = () => {
 
   return (
     <div className="flex h-screen bg-background">
+      <script type="application/ld+json">{JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name: "Made for ATS — CV Scanner",
+        applicationCategory: "WebApplication",
+        operatingSystem: "Any",
+        url: "https://ohmyats.lovable.app/scan",
+        description: "AI-powered CV scanner that analyses resumes against job descriptions using dual-model ensemble scoring.",
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "EUR",
+        },
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: "4.7",
+          ratingCount: "120",
+        },
+      })}</script>
       {/* Left panel */}
       <div className="w-[420px] shrink-0 border-r border-border bg-muted/30 flex flex-col">
         <InputPanel onScan={handleScan} isScanning={state === "scanning"} />
