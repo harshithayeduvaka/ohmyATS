@@ -1,4 +1,21 @@
-import { MessageCircle, Mail, ExternalLink } from "lucide-react";
+import { MessageCircle } from "lucide-react";
+
+const faqData = [
+  { q: "Is oh my ATS free?", a: "Yes, all core tools are free to use. We believe job seekers shouldn't have to pay just to get past an ATS." },
+  { q: "How accurate is the ATS scan?", a: "We reference multiple ATS systems (Bullhorn, Jobscan, etc.) to give you a comprehensive analysis. No single scanner is perfect, which is exactly why we built this." },
+  { q: "Can I use this for French/EU job markets?", a: "Absolutely. All AI tools support English and French output and follow France/EU professional standards." },
+  { q: "Is my data safe?", a: "Your data is stored securely and only accessible to you. We never share or sell your information." },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqData.map((faq) => ({
+    "@type": "Question",
+    name: faq.q,
+    acceptedAnswer: { "@type": "Answer", text: faq.a },
+  })),
+};
 
 const Support = () => (
   <div className="min-h-screen bg-background">
