@@ -26,6 +26,8 @@ import ElevatorPitch from "./pages/ElevatorPitch.tsx";
 import Profile from "./pages/Profile.tsx";
 import Support from "./pages/Support.tsx";
 import About from "./pages/About.tsx";
+import Privacy from "./pages/Privacy.tsx";
+import DataProcessing from "./pages/DataProcessing.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -105,6 +107,14 @@ const seo: Record<string, SeoMeta> = {
     title: "About — Made for ATS",
     description: "Made for ATS is an AI-powered job-search toolkit built for SKEMA Business School students and EU professionals.",
   },
+  "/privacy": {
+    title: "Privacy Policy — Made for ATS",
+    description: "How Made for ATS collects, processes, and protects your CV and personal data under GDPR.",
+  },
+  "/data-processing": {
+    title: "Data Processing — Made for ATS",
+    description: "Technical and organisational measures, sub-processors, and security details for Made for ATS.",
+  },
 };
 
 const Seo = ({ path }: { path: string }) => {
@@ -149,6 +159,8 @@ const App = () => (
                 <Route path="/profile" element={withSeo("/profile", <Profile />)} />
                 <Route path="/support" element={withSeo("/support", <Support />)} />
                 <Route path="/about" element={withSeo("/about", <About />)} />
+                <Route path="/privacy" element={withSeo("/privacy", <Privacy />)} />
+                <Route path="/data-processing" element={withSeo("/data-processing", <DataProcessing />)} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AppLayout>
