@@ -1,5 +1,6 @@
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/AppSidebar";
+import CookieBanner from "@/components/CookieBanner";
 import logo from "@/assets/logo.png";
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => (
@@ -14,6 +15,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => (
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>
+    <CookieBanner />
   </SidebarProvider>
 );
 
