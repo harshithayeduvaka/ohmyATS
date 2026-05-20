@@ -5,25 +5,33 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
-// Purges scan_history rows older than 90 days. Protected by CRON_SECRET — only
-// the scheduled pg_cron job (which passes the shared secret header) can invoke it.
+// Purges scan_history rows older than 90 days. Protected by a Vault-stored
+// shared secret — only the scheduled pg_cron job (which reads the same vault
+// secret) can invoke it.
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-
-  const expected = Deno.env.get("CRON_SECRET");
-  const provided = req.headers.get("x-cron-secret");
-  if (!expected || provided !== expected) {
-    return new Response(JSON.stringify({ error: "Forbidden" }), {
-      status: 403,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
 
   try {
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // Validate caller against the vault-stored cron secret
+    const provided = req.headers.get("x-cron-secret");
+    const { data: secretRow, error: secretErr } = await admin
+      .schema("vault")
+      .from("decrypted_secrets")
+      .select("decrypted_secret")
+      .eq("name", "purge_cron_secret")
+      .maybeSingle();
+
+    if (secretErr || !secretRow?.decrypted_secret || provided !== secretRow.decrypted_secret) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
     const { error, count } = await admin
