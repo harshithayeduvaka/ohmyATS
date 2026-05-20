@@ -2,12 +2,22 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
-// Purges scan_history rows older than 90 days. Safe to call any time.
+// Purges scan_history rows older than 90 days. Protected by CRON_SECRET — only
+// the scheduled pg_cron job (which passes the shared secret header) can invoke it.
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const expected = Deno.env.get("CRON_SECRET");
+  const provided = req.headers.get("x-cron-secret");
+  if (!expected || provided !== expected) {
+    return new Response(JSON.stringify({ error: "Forbidden" }), {
+      status: 403,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   try {
     const admin = createClient(
