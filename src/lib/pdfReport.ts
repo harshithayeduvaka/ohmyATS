@@ -1,5 +1,13 @@
 import { ScanResult } from "@/lib/types";
 
+const esc = (v: unknown): string =>
+  String(v ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
 export const generatePdfReport = (result: ScanResult) => {
   const { scores, botPass, algorithm, humanPass, rewrites, keywordAnalysis } = result;
 
@@ -40,44 +48,44 @@ export const generatePdfReport = (result: ScanResult) => {
 </head>
 <body>
   <h1>ATS Intelligence Report</h1>
-  <p class="subtitle">Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+  <p class="subtitle">Generated on ${esc(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }))}</p>
 
   <h2>Score Breakdown</h2>
   <div class="scores">
-    <div class="score-item"><div class="score-value overall">${scores.overall}</div><div class="score-label">Overall</div></div>
-    <div class="score-item"><div class="score-value">${scores.atsCompatibility}</div><div class="score-label">ATS Compat.</div></div>
-    <div class="score-item"><div class="score-value">${scores.keywordMatch}</div><div class="score-label">Keywords</div></div>
-    <div class="score-item"><div class="score-value">${scores.recruiterAppeal}</div><div class="score-label">Recruiter</div></div>
-    <div class="score-item"><div class="score-value">${scores.impactClarity}</div><div class="score-label">Impact</div></div>
-    <div class="score-item"><div class="score-value">${scores.formatScore}</div><div class="score-label">Format</div></div>
+    <div class="score-item"><div class="score-value overall">${esc(scores.overall)}</div><div class="score-label">Overall</div></div>
+    <div class="score-item"><div class="score-value">${esc(scores.atsCompatibility)}</div><div class="score-label">ATS Compat.</div></div>
+    <div class="score-item"><div class="score-value">${esc(scores.keywordMatch)}</div><div class="score-label">Keywords</div></div>
+    <div class="score-item"><div class="score-value">${esc(scores.recruiterAppeal)}</div><div class="score-label">Recruiter</div></div>
+    <div class="score-item"><div class="score-value">${esc(scores.impactClarity)}</div><div class="score-label">Impact</div></div>
+    <div class="score-item"><div class="score-value">${esc(scores.formatScore)}</div><div class="score-label">Format</div></div>
   </div>
 
   <h2>Bot Pass — Parsing & Formatting</h2>
-  ${botPass.formatIssues.length > 0 ? botPass.formatIssues.map(i => `<div class="issue">${i}</div>`).join('') : '<p>No format issues detected.</p>'}
+  ${botPass.formatIssues.length > 0 ? botPass.formatIssues.map(i => `<div class="issue">${esc(i)}</div>`).join('') : '<p>No format issues detected.</p>'}
   <br/>
-  ${botPass.extractedFields.map(f => `<div class="field"><span>${f.label}</span><span class="${f.status}">${f.value}</span></div>`).join('')}
+  ${botPass.extractedFields.map(f => `<div class="field"><span>${esc(f.label)}</span><span class="${esc(f.status)}">${esc(f.value)}</span></div>`).join('')}
 
   <h2>Algorithm Ranking — Hard Requirements</h2>
-  ${algorithm.hardRequirements.map(r => `<div class="field"><span>${r.skill}</span><span class="${r.status}">${r.status.toUpperCase()}${r.context ? ' — ' + r.context : ''}</span></div>`).join('')}
+  ${algorithm.hardRequirements.map(r => `<div class="field"><span>${esc(r.skill)}</span><span class="${esc(r.status)}">${esc(String(r.status).toUpperCase())}${r.context ? ' — ' + esc(r.context) : ''}</span></div>`).join('')}
 
   <h2>Soft Skills</h2>
-  ${algorithm.softSkills.map(s => `<div class="field"><span>${s.skill}</span><span class="${s.status}">${s.status.toUpperCase()}</span></div>`).join('')}
+  ${algorithm.softSkills.map(s => `<div class="field"><span>${esc(s.skill)}</span><span class="${esc(s.status)}">${esc(String(s.status).toUpperCase())}</span></div>`).join('')}
 
   <h2>Phantom Matches</h2>
-  ${algorithm.phantomMatches.map(p => `<div class="issue"><strong>${p.keyword}:</strong> ${p.reason}</div>`).join('')}
+  ${algorithm.phantomMatches.map(p => `<div class="issue"><strong>${esc(p.keyword)}:</strong> ${esc(p.reason)}</div>`).join('')}
 
   <h2>Keyword Analysis</h2>
-  ${keywordAnalysis.map(k => `<div class="keyword-row"><span class="${k.foundInCV ? 'found' : 'not-found'}">${k.foundInCV ? '✓' : '✗'}</span><strong>${k.keyword}</strong><span class="badge badge-${k.importance}">${k.importance}</span><span style="color:#666;font-size:11px">${k.context}</span></div>`).join('')}
+  ${keywordAnalysis.map(k => `<div class="keyword-row"><span class="${k.foundInCV ? 'found' : 'not-found'}">${k.foundInCV ? '✓' : '✗'}</span><strong>${esc(k.keyword)}</strong><span class="badge badge-${esc(k.importance)}">${esc(k.importance)}</span><span style="color:#666;font-size:11px">${esc(k.context)}</span></div>`).join('')}
 
   <h2>Recruiter Impression</h2>
-  <p>${humanPass.overallImpression}</p>
+  <p>${esc(humanPass.overallImpression)}</p>
   <h3 style="margin-top:12px;font-size:13px;">Strengths</h3>
-  <ul>${humanPass.strengths.map(s => `<li>${s}</li>`).join('')}</ul>
+  <ul>${humanPass.strengths.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
   <h3 style="margin-top:12px;font-size:13px;">Weaknesses</h3>
-  <ul>${humanPass.weaknesses.map(w => `<li>${w}</li>`).join('')}</ul>
+  <ul>${humanPass.weaknesses.map(w => `<li>${esc(w)}</li>`).join('')}</ul>
 
   <h2>Actionable Rewrites</h2>
-  ${rewrites.map(r => `<div class="rewrite"><p><strong>${r.context}</strong></p><p class="before">Before: ${r.before}</p><p class="after">After: ${r.after}</p></div>`).join('')}
+  ${rewrites.map(r => `<div class="rewrite"><p><strong>${esc(r.context)}</strong></p><p class="before">Before: ${esc(r.before)}</p><p class="after">After: ${esc(r.after)}</p></div>`).join('')}
 </body>
 </html>`;
 
