@@ -12,12 +12,24 @@ serve(async (req) => {
   }
 
   try {
-    const { cv, jd, role, companyName, companySector, interviewType, mode, language } = await req.json();
+    const body = await req.json();
+    const { cv, jd, role, companyName, companySector, interviewType, mode, language } = body;
 
     if (!jd) {
       return new Response(
         JSON.stringify({ error: "Job Description is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (
+      (typeof cv === "string" && cv.length > 30000) ||
+      (typeof jd === "string" && jd.length > 15000) ||
+      [role, companyName, companySector, interviewType].some((v) => typeof v === "string" && v.length > 500)
+    ) {
+      return new Response(
+        JSON.stringify({ error: "Payload too large." }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

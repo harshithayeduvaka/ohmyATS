@@ -359,6 +359,13 @@ serve(async (req) => {
       );
     }
 
+    if ((typeof cv === "string" && cv.length > 30000) || (typeof jd === "string" && jd.length > 15000)) {
+      return new Response(
+        JSON.stringify({ error: "Payload too large. CV must be ≤ 30000 chars and JD ≤ 15000 chars." }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
