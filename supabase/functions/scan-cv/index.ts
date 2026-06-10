@@ -134,9 +134,6 @@ K. LOW-SIGNAL SKILL ENTRIES:
    • Microsoft Office basics ("Word, Excel, Outlook"), generic "Internet", "Email", "Typing" → remove unless role is admin/data-entry. Replace with role-relevant tools.
    • Outdated OS specifics ("Windows XP", "Windows 7") → flag unless legacy-systems role.
 
-═══════════════════════════════════════════
-OUTPUT FORMAT
-═══════════════════════════════════════════
 
 ═══════════════════════════════════════════
 OUTPUT FORMAT
