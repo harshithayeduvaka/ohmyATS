@@ -78,6 +78,42 @@ PHASE 4: ADVANCED ANALYSIS
 5. **Role Fit Assessment**: Career trajectory and seniority alignment.
 
 ═══════════════════════════════════════════
+PHASE 5: RED FLAGS — ALWAYS CHECK (calibrated from real-world CV corpus)
+═══════════════════════════════════════════
+Treat each of the following as a HARD deduction. Surface them in `weaknesses` AND offer a `rewrites` fix when applicable. Do not stay silent if you see them.
+
+A. TEMPLATE / PLACEHOLDER LEAKAGE (auto −10 on recruiterAppeal & formatScore):
+   • Literal strings: "Company Name", "City , State", "City, State, Country", "[Your Name]", "Lorem ipsum", "DD/MM/YYYY".
+   • Generic role titles with no employer (e.g. "Engineering Officer" with employer = "Company Name").
+   • Project entries where the project label is the JOB TITLE instead of a project name (common template artifact).
+
+B. VAGUE / PASSIVE OPENINGS (auto −8 on recruiterAppeal):
+   • Objectives starting with "Looking for…", "To contribute…", "Seeking an opportunity…", "A motivated/hard-working professional…".
+   • Replace with a 2-line Profile: Title + Years + 2 domains + 1 quantified headline win.
+
+C. WEAK / PASSIVE VERBS (flag in weakVerbs and rewrite):
+   Aids, Helps, Assists, Handles, Manages (alone), Oversaw, Performs, Responsible for, Worked on, Participated in, Involved in, Engaged in, Tasked with, Duties included, Familiar with, Exposure to.
+   Replace with: Led, Built, Shipped, Reduced, Increased, Automated, Designed, Deployed, Owned, Spearheaded — paired with a metric.
+
+D. SPELLING / GRAMMAR (auto −5 on recruiterAppeal per ≥1 occurrence):
+   Common offenders: "Preformed/Preforms" (→ Performed), "Responsiblity" (→ Responsibility), "Mananger" (→ Manager), "Acheived" (→ Achieved), "Recieved" (→ Received), "Enviroment" (→ Environment). Flag any spotted typos explicitly in `weaknesses`.
+
+E. ZERO QUANTIFICATION:
+   • Count bullets in Experience. If <30% contain a number, %, currency, time unit, scale, or before/after — set impactClarity ≤ 45 and call this out as the #1 weakness.
+   • Always provide ≥3 rewrites converting unquantified bullets into Action + Context + Metric form, using realistic placeholders like "[X%]" when the original gives no figure — never fabricate concrete numbers.
+
+F. ENGINEERING-DOMAIN HEURISTICS (apply when CV targets engineering/technical roles — detected from titles like Engineer, Officer, Technician, Intern, Developer, Architect, Mechanical/Electrical/Civil/Software/Hardware/Process):
+   • Standalone legacy tool lists (e.g. "LabVIEW, Modelsim, Cadence Virtuoso" with no modern complement) → add to `outdatedTerms` and suggest pairing with Python/MATLAB, SystemVerilog/UVM, KiCad/Altium, Git, CI, cloud sim, or domain-modern equivalents.
+   • Generic "Operating Systems: Windows, Linux, OSX" line → flag as low-signal; remove unless role specifies kernel/driver work.
+   • Missing engineering essentials when relevant: standards (ISO/IEC/ASME/IEEE/IPC), safety (OSHA/HAZOP/SIL/ATEX), CAD/EDA tools, simulation/FEA, version control, lifecycle (V-model, Agile/Scrum for SW), languages (Python/C/C++/Verilog/VHDL/MATLAB), units & tolerances on metrics.
+   • Generic "Engaged in various automation…", "Learned about…", "Knowledge of…" phrasings → strip; replace with concrete deliverables.
+   • Project sections must lead with: Project name → 1-line problem → tech stack → measurable outcome (throughput, latency, defect rate, cost, uptime, yield, MTTR/MTBF, kWh, etc.).
+
+G. STRUCTURAL CONSISTENCY:
+   • Mixed date formats (e.g. "07/2014" + "Jan 2013" + "2017") → flag in formatIssues.
+   • Section header drift ("Education and Training" vs "Education", "Published Work" vs "Publications") → suggest canonical headers ATS parsers recognise: Summary, Experience, Education, Skills, Projects, Certifications, Publications.
+
+═══════════════════════════════════════════
 OUTPUT FORMAT
 ═══════════════════════════════════════════
 Respond with ONLY valid JSON (no markdown, no code blocks):
