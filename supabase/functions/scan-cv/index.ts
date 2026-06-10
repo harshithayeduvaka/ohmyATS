@@ -112,6 +112,28 @@ F. ENGINEERING-DOMAIN HEURISTICS (apply when CV targets engineering/technical ro
 G. STRUCTURAL CONSISTENCY:
    • Mixed date formats (e.g. "07/2014" + "Jan 2013" + "2017") → flag in formatIssues.
    • Section header drift ("Education and Training" vs "Education", "Published Work" vs "Publications") → suggest canonical headers ATS parsers recognise: Summary, Experience, Education, Skills, Projects, Certifications, Publications.
+   • Lowercase bullet starts (e.g. "responsible for managing…") → flag as polish issue.
+   • Wall-of-text bullets that cram 3+ ideas into one line → split into discrete Action+Context+Result bullets, max 2 lines each.
+   • Duplicate content across "Accomplishments" and "Experience" sections → consolidate; "Accomplishments" should hold awards/recognitions only, not duplicated job duties.
+
+H. BUZZWORD & PERSONALITY-AS-SKILL DEFLATION (auto −5 on recruiterAppeal):
+   • Reject these openers / fillers in Summary or Skills: "Self-motivated", "Hard-working", "Goal-oriented", "Detail-oriented", "Results-driven", "Team player", "Dynamic", "Passionate", "Innovative", "Synergy", "Thinks outside the box", "Go-getter", "Strategic thinker" (when unsupported by evidence).
+   • Personality traits listed as skills ("Dependable", "Personable", "Analytical", "Dedicated team player", "Adaptable") → call out as low-signal; Skills section should be tools/methods/frameworks/standards, not adjectives.
+   • Replace with a Profile that opens with: "{Role} with {N} years in {domain1, domain2} — {one quantified flagship win}".
+
+I. ACRONYMS & INTERNAL JARGON (clarity hit):
+   • Any acronym used without expansion on first mention → flag (e.g. "SCOM", "HIPO", "MSPOLL", "MACH", "VMM", "App-V", "SOW", "MTBF" should appear as "Acronym (Full Form)" first time).
+   • Internal/proprietary project names, codenames, or person names (e.g. "Angel Tree", "Digi Girlz", "Know-Me", "Vince Hampton", specific customer-rep names) → strip; recruiters outside the company won't recognise them. Replace with neutral descriptors ("internal mentorship programme", "cross-team escalation initiative").
+   • Title prefixes that look like program/aircraft numbers (e.g. "737 Industrial Engineering Manager") often indicate PDF-parsing bleed — flag in formatIssues and suggest cleaning.
+
+J. TENURE TELESCOPING:
+   • Any single role >3 years with fewer than 3 distinct accomplishment bullets → flag as "telescoped tenure". Long tenures need MORE substance, not less. Demand 1 bullet per ~18 months of tenure, each with scope + result.
+   • Conversely, every <6-month role with 5+ bullets → flag as over-detailed; condense.
+
+K. LOW-SIGNAL SKILL ENTRIES:
+   • Microsoft Office basics ("Word, Excel, Outlook"), generic "Internet", "Email", "Typing" → remove unless role is admin/data-entry. Replace with role-relevant tools.
+   • Outdated OS specifics ("Windows XP", "Windows 7") → flag unless legacy-systems role.
+
 
 ═══════════════════════════════════════════
 OUTPUT FORMAT
