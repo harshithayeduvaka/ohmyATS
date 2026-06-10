@@ -11,6 +11,9 @@ serve(async (req) => {
   try {
     const { jd } = await req.json();
     if (!jd) return new Response(JSON.stringify({ error: "Job description is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (typeof jd === "string" && jd.length > 15000) {
+      return new Response(JSON.stringify({ error: "Payload too large. JD must be ≤ 15000 chars." }), { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");

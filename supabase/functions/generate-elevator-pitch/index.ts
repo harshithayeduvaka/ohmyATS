@@ -12,6 +12,9 @@ serve(async (req) => {
   try {
     const { cv, role, language, duration } = await req.json();
     if (!cv) return new Response(JSON.stringify({ error: "CV is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if ((typeof cv === "string" && cv.length > 30000) || (typeof role === "string" && role.length > 500)) {
+      return new Response(JSON.stringify({ error: "Payload too large." }), { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const lang = language === "french" ? "French" : "English";
     const seconds = duration === "30s" ? "30 seconds (about 75 words)" : duration === "90s" ? "90 seconds (about 225 words)" : "60 seconds (about 150 words)";

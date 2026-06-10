@@ -66,6 +66,17 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    if (
+      (typeof cv === "string" && cv.length > 30000) ||
+      (typeof jd === "string" && jd.length > 15000) ||
+      (typeof companyName === "string" && companyName.length > 500) ||
+      (typeof roleName === "string" && roleName.length > 500)
+    ) {
+      return new Response(
+        JSON.stringify({ error: "Payload too large." }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const lang = language === "french" ? "French" : "English";
     const langInstruction = language === "french"

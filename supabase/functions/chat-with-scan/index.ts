@@ -32,6 +32,18 @@ serve(async (req) => {
       );
     }
 
+    if (
+      messages.length > 30 ||
+      messages.some((m: any) => typeof m?.content === "string" && m.content.length > 8000) ||
+      (typeof cv === "string" && cv.length > 30000) ||
+      (typeof jd === "string" && jd.length > 15000)
+    ) {
+      return new Response(
+        JSON.stringify({ error: "Payload too large. Limit: 30 messages, 8000 chars each; CV ≤ 30000; JD ≤ 15000." }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");

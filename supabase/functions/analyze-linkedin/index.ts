@@ -11,6 +11,13 @@ serve(async (req) => {
   try {
     const { profileText, targetRole, industry } = await req.json();
     if (!profileText) return new Response(JSON.stringify({ error: "LinkedIn profile text is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (
+      (typeof profileText === "string" && profileText.length > 30000) ||
+      (typeof targetRole === "string" && targetRole.length > 500) ||
+      (typeof industry === "string" && industry.length > 500)
+    ) {
+      return new Response(JSON.stringify({ error: "Payload too large." }), { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
