@@ -80,7 +80,7 @@ PHASE 4: ADVANCED ANALYSIS
 ═══════════════════════════════════════════
 PHASE 5: RED FLAGS — ALWAYS CHECK (calibrated from real-world CV corpus)
 ═══════════════════════════════════════════
-Treat each of the following as a HARD deduction. Surface them in `weaknesses` AND offer a `rewrites` fix when applicable. Do not stay silent if you see them.
+Treat each of the following as a HARD deduction. Surface them in \`weaknesses\` AND offer a \`rewrites\` fix when applicable. Do not stay silent if you see them.
 
 A. TEMPLATE / PLACEHOLDER LEAKAGE (auto −10 on recruiterAppeal & formatScore):
    • Literal strings: "Company Name", "City , State", "City, State, Country", "[Your Name]", "Lorem ipsum", "DD/MM/YYYY".
@@ -96,14 +96,14 @@ C. WEAK / PASSIVE VERBS (flag in weakVerbs and rewrite):
    Replace with: Led, Built, Shipped, Reduced, Increased, Automated, Designed, Deployed, Owned, Spearheaded — paired with a metric.
 
 D. SPELLING / GRAMMAR (auto −5 on recruiterAppeal per ≥1 occurrence):
-   Common offenders: "Preformed/Preforms" (→ Performed), "Responsiblity" (→ Responsibility), "Mananger" (→ Manager), "Acheived" (→ Achieved), "Recieved" (→ Received), "Enviroment" (→ Environment). Flag any spotted typos explicitly in `weaknesses`.
+   Common offenders: "Preformed/Preforms" (→ Performed), "Responsiblity" (→ Responsibility), "Mananger" (→ Manager), "Acheived" (→ Achieved), "Recieved" (→ Received), "Enviroment" (→ Environment). Flag any spotted typos explicitly in \`weaknesses\`.
 
 E. ZERO QUANTIFICATION:
    • Count bullets in Experience. If <30% contain a number, %, currency, time unit, scale, or before/after — set impactClarity ≤ 45 and call this out as the #1 weakness.
    • Always provide ≥3 rewrites converting unquantified bullets into Action + Context + Metric form, using realistic placeholders like "[X%]" when the original gives no figure — never fabricate concrete numbers.
 
 F. ENGINEERING-DOMAIN HEURISTICS (apply when CV targets engineering/technical roles — detected from titles like Engineer, Officer, Technician, Intern, Developer, Architect, Mechanical/Electrical/Civil/Software/Hardware/Process):
-   • Standalone legacy tool lists (e.g. "LabVIEW, Modelsim, Cadence Virtuoso" with no modern complement) → add to `outdatedTerms` and suggest pairing with Python/MATLAB, SystemVerilog/UVM, KiCad/Altium, Git, CI, cloud sim, or domain-modern equivalents.
+   • Standalone legacy tool lists (e.g. "LabVIEW, Modelsim, Cadence Virtuoso" with no modern complement) → add to \`outdatedTerms\` and suggest pairing with Python/MATLAB, SystemVerilog/UVM, KiCad/Altium, Git, CI, cloud sim, or domain-modern equivalents.
    • Generic "Operating Systems: Windows, Linux, OSX" line → flag as low-signal; remove unless role specifies kernel/driver work.
    • Missing engineering essentials when relevant: standards (ISO/IEC/ASME/IEEE/IPC), safety (OSHA/HAZOP/SIL/ATEX), CAD/EDA tools, simulation/FEA, version control, lifecycle (V-model, Agile/Scrum for SW), languages (Python/C/C++/Verilog/VHDL/MATLAB), units & tolerances on metrics.
    • Generic "Engaged in various automation…", "Learned about…", "Knowledge of…" phrasings → strip; replace with concrete deliverables.
@@ -141,7 +141,7 @@ L. SECTION DUPLICATION & STRUCTURAL BLOAT:
    • "Highlights" or "Accomplishments" section that is actually a skills list (comma-separated tools, no verbs, no outcomes) → rename to "Skills" or replace with real achievements (verb + metric).
 
 M. TITLE / NARRATIVE MISMATCH (recruiter trust-killer):
-   • CV title says one domain (e.g., "Software Engineering Manager", "Civil Engineering Assistant", "Construction Engineering Supervisor") but Summary opens with an unrelated discipline (e.g., "Human Resources professional", "Security professional") → auto −15 on recruiterAppeal, auto −10 on overall. Flag in `weaknesses` as "Title/Summary discipline mismatch — recruiter will discard within 6 seconds."
+   • CV title says one domain (e.g., "Software Engineering Manager", "Civil Engineering Assistant", "Construction Engineering Supervisor") but Summary opens with an unrelated discipline (e.g., "Human Resources professional", "Security professional") → auto −15 on recruiterAppeal, auto −10 on overall. Flag in \`weaknesses\` as "Title/Summary discipline mismatch — recruiter will discard within 6 seconds."
    • Most recent role unrelated to target domain (e.g., "Medical Receptionist" as current role on a Civil Engineering CV) with no bridging narrative → flag and suggest a "Career Focus" line explaining the pivot.
    • Job title in CV header that doesn't appear anywhere in the Experience section → flag as aspirational/inflated title.
 
