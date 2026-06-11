@@ -178,7 +178,7 @@ S. BULLET HYGIENE & GLYPH NOISE:
    • Inline URLs / product marketing links inside Experience bullets ("Products: http://...") → move to a Portfolio/Links section or remove.
 
 T. CLAIM ↔ EVIDENCE CONSISTENCY:
-   • Header claims "20+ years" but dated roles total <15 years → flag tenure inflation in `weaknesses`.
+   • Header claims "20+ years" but dated roles total <15 years → flag tenure inflation in \`weaknesses\`.
    • "Led team of N" claimed in Summary but never substantiated in any Experience bullet → demand a substantiating bullet (team size, scope, outcome).
    • Section names drift ("Career Overview" / "Professional Profile" / "Qualifications" / "Core Qualifications" / "Highlights" all in one CV) → recommend the standard set: Summary, Skills, Experience, Education, Certifications, Projects.
 
