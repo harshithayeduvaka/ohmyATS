@@ -80,7 +80,7 @@ PHASE 4: ADVANCED ANALYSIS
 ═══════════════════════════════════════════
 PHASE 5: RED FLAGS — ALWAYS CHECK (calibrated from real-world CV corpus)
 ═══════════════════════════════════════════
-Treat each of the following as a HARD deduction. Surface them in `weaknesses` AND offer a `rewrites` fix when applicable. Do not stay silent if you see them.
+Treat each of the following as a HARD deduction. Surface them in \`weaknesses\` AND offer a \`rewrites\` fix when applicable. Do not stay silent if you see them.
 
 A. TEMPLATE / PLACEHOLDER LEAKAGE (auto −10 on recruiterAppeal & formatScore):
    • Literal strings: "Company Name", "City , State", "City, State, Country", "[Your Name]", "Lorem ipsum", "DD/MM/YYYY".
@@ -96,14 +96,14 @@ C. WEAK / PASSIVE VERBS (flag in weakVerbs and rewrite):
    Replace with: Led, Built, Shipped, Reduced, Increased, Automated, Designed, Deployed, Owned, Spearheaded — paired with a metric.
 
 D. SPELLING / GRAMMAR (auto −5 on recruiterAppeal per ≥1 occurrence):
-   Common offenders: "Preformed/Preforms" (→ Performed), "Responsiblity" (→ Responsibility), "Mananger" (→ Manager), "Acheived" (→ Achieved), "Recieved" (→ Received), "Enviroment" (→ Environment). Flag any spotted typos explicitly in `weaknesses`.
+   Common offenders: "Preformed/Preforms" (→ Performed), "Responsiblity" (→ Responsibility), "Mananger" (→ Manager), "Acheived" (→ Achieved), "Recieved" (→ Received), "Enviroment" (→ Environment). Flag any spotted typos explicitly in \`weaknesses\`.
 
 E. ZERO QUANTIFICATION:
    • Count bullets in Experience. If <30% contain a number, %, currency, time unit, scale, or before/after — set impactClarity ≤ 45 and call this out as the #1 weakness.
    • Always provide ≥3 rewrites converting unquantified bullets into Action + Context + Metric form, using realistic placeholders like "[X%]" when the original gives no figure — never fabricate concrete numbers.
 
 F. ENGINEERING-DOMAIN HEURISTICS (apply when CV targets engineering/technical roles — detected from titles like Engineer, Officer, Technician, Intern, Developer, Architect, Mechanical/Electrical/Civil/Software/Hardware/Process):
-   • Standalone legacy tool lists (e.g. "LabVIEW, Modelsim, Cadence Virtuoso" with no modern complement) → add to `outdatedTerms` and suggest pairing with Python/MATLAB, SystemVerilog/UVM, KiCad/Altium, Git, CI, cloud sim, or domain-modern equivalents.
+   • Standalone legacy tool lists (e.g. "LabVIEW, Modelsim, Cadence Virtuoso" with no modern complement) → add to \`outdatedTerms\` and suggest pairing with Python/MATLAB, SystemVerilog/UVM, KiCad/Altium, Git, CI, cloud sim, or domain-modern equivalents.
    • Generic "Operating Systems: Windows, Linux, OSX" line → flag as low-signal; remove unless role specifies kernel/driver work.
    • Missing engineering essentials when relevant: standards (ISO/IEC/ASME/IEEE/IPC), safety (OSHA/HAZOP/SIL/ATEX), CAD/EDA tools, simulation/FEA, version control, lifecycle (V-model, Agile/Scrum for SW), languages (Python/C/C++/Verilog/VHDL/MATLAB), units & tolerances on metrics.
    • Generic "Engaged in various automation…", "Learned about…", "Knowledge of…" phrasings → strip; replace with concrete deliverables.
@@ -133,6 +133,33 @@ J. TENURE TELESCOPING:
 K. LOW-SIGNAL SKILL ENTRIES:
    • Microsoft Office basics ("Word, Excel, Outlook"), generic "Internet", "Email", "Typing" → remove unless role is admin/data-entry. Replace with role-relevant tools.
    • Outdated OS specifics ("Windows XP", "Windows 7") → flag unless legacy-systems role.
+
+
+L. SECTION DUPLICATION & STRUCTURAL BLOAT:
+   • "Experience" and "Work History" sections containing identical roles + identical bullets → auto −10 on formatScore, auto −8 on recruiterAppeal. Recommend collapsing into a single "Experience" section.
+   • Repeated bullets across roles (same sentence appearing under 2+ jobs) → flag as copy-paste; demand role-specific accomplishments.
+   • "Highlights" or "Accomplishments" section that is actually a skills list (comma-separated tools, no verbs, no outcomes) → rename to "Skills" or replace with real achievements (verb + metric).
+
+M. TITLE / NARRATIVE MISMATCH (recruiter trust-killer):
+   • CV title says one domain (e.g., "Software Engineering Manager", "Civil Engineering Assistant", "Construction Engineering Supervisor") but Summary opens with an unrelated discipline (e.g., "Human Resources professional", "Security professional") → auto −15 on recruiterAppeal, auto −10 on overall. Flag in \`weaknesses\` as "Title/Summary discipline mismatch — recruiter will discard within 6 seconds."
+   • Most recent role unrelated to target domain (e.g., "Medical Receptionist" as current role on a Civil Engineering CV) with no bridging narrative → flag and suggest a "Career Focus" line explaining the pivot.
+   • Job title in CV header that doesn't appear anywhere in the Experience section → flag as aspirational/inflated title.
+
+N. ENCODING & TYPOGRAPHIC ARTEFACTS:
+   • Mojibake / stray glyphs (Â, ï¼, â€™, â€“, ﻿, ​) → auto −5 on formatScore. These come from copy-paste between Word/PDF/Google Docs and signal sloppy proofreading.
+   • Trailing commas in lists ("AutoCAD, MS Word,"), double spaces, smart quotes mixed with straight quotes → flag in formatIssues.
+   • Two-column "Highlights" tables that ATS parsers break — flag and recommend single-column bulleted Skills.
+
+O. DATE-RANGE INTEGRITY:
+   • Overlapping roles with no "concurrent" / "part-time" qualifier (e.g., full-time role A 2010–2015 overlaps full-time role B 2012–2014) → flag as "Unexplained role overlap" in weaknesses.
+   • "to Current" on an older role while a newer dated role exists → flag as stale; ask user to close the date.
+   • Gap >12 months between roles with no explanation → flag and suggest a one-line gap statement (study, caregiving, freelance, relocation).
+   • Mixed date formats within the same CV ("September 2014" vs "08/2015" vs "01/2017") → already covered in G; reinforce here for date column specifically.
+
+P. SECTION-LABEL MISUSE:
+   • "Accomplishments" populated with responsibilities ("Assisted in...", "Helped students...") instead of outcomes → flag; demand verb + metric + result.
+   • "Profile" / "Summary" that lists tools instead of positioning the candidate → ask for a 2-line positioning statement (role + domain + signature win) and move tools to Skills.
+   • "Projects" section bullets describing course content instead of the candidate's contribution + outcome → flag as "course description, not contribution".
 
 
 ═══════════════════════════════════════════
