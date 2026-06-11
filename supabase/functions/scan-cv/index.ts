@@ -135,6 +135,33 @@ K. LOW-SIGNAL SKILL ENTRIES:
    • Outdated OS specifics ("Windows XP", "Windows 7") → flag unless legacy-systems role.
 
 
+L. SECTION DUPLICATION & STRUCTURAL BLOAT:
+   • "Experience" and "Work History" sections containing identical roles + identical bullets → auto −10 on formatScore, auto −8 on recruiterAppeal. Recommend collapsing into a single "Experience" section.
+   • Repeated bullets across roles (same sentence appearing under 2+ jobs) → flag as copy-paste; demand role-specific accomplishments.
+   • "Highlights" or "Accomplishments" section that is actually a skills list (comma-separated tools, no verbs, no outcomes) → rename to "Skills" or replace with real achievements (verb + metric).
+
+M. TITLE / NARRATIVE MISMATCH (recruiter trust-killer):
+   • CV title says one domain (e.g., "Software Engineering Manager", "Civil Engineering Assistant", "Construction Engineering Supervisor") but Summary opens with an unrelated discipline (e.g., "Human Resources professional", "Security professional") → auto −15 on recruiterAppeal, auto −10 on overall. Flag in `weaknesses` as "Title/Summary discipline mismatch — recruiter will discard within 6 seconds."
+   • Most recent role unrelated to target domain (e.g., "Medical Receptionist" as current role on a Civil Engineering CV) with no bridging narrative → flag and suggest a "Career Focus" line explaining the pivot.
+   • Job title in CV header that doesn't appear anywhere in the Experience section → flag as aspirational/inflated title.
+
+N. ENCODING & TYPOGRAPHIC ARTEFACTS:
+   • Mojibake / stray glyphs (Â, ï¼, â€™, â€“, ﻿, ​) → auto −5 on formatScore. These come from copy-paste between Word/PDF/Google Docs and signal sloppy proofreading.
+   • Trailing commas in lists ("AutoCAD, MS Word,"), double spaces, smart quotes mixed with straight quotes → flag in formatIssues.
+   • Two-column "Highlights" tables that ATS parsers break — flag and recommend single-column bulleted Skills.
+
+O. DATE-RANGE INTEGRITY:
+   • Overlapping roles with no "concurrent" / "part-time" qualifier (e.g., full-time role A 2010–2015 overlaps full-time role B 2012–2014) → flag as "Unexplained role overlap" in weaknesses.
+   • "to Current" on an older role while a newer dated role exists → flag as stale; ask user to close the date.
+   • Gap >12 months between roles with no explanation → flag and suggest a one-line gap statement (study, caregiving, freelance, relocation).
+   • Mixed date formats within the same CV ("September 2014" vs "08/2015" vs "01/2017") → already covered in G; reinforce here for date column specifically.
+
+P. SECTION-LABEL MISUSE:
+   • "Accomplishments" populated with responsibilities ("Assisted in...", "Helped students...") instead of outcomes → flag; demand verb + metric + result.
+   • "Profile" / "Summary" that lists tools instead of positioning the candidate → ask for a 2-line positioning statement (role + domain + signature win) and move tools to Skills.
+   • "Projects" section bullets describing course content instead of the candidate's contribution + outcome → flag as "course description, not contribution".
+
+
 ═══════════════════════════════════════════
 OUTPUT FORMAT
 ═══════════════════════════════════════════
