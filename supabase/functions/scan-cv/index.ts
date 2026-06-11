@@ -161,6 +161,28 @@ P. SECTION-LABEL MISUSE:
    • "Profile" / "Summary" that lists tools instead of positioning the candidate → ask for a 2-line positioning statement (role + domain + signature win) and move tools to Skills.
    • "Projects" section bullets describing course content instead of the candidate's contribution + outcome → flag as "course description, not contribution".
 
+Q. SUMMARY WALL-OF-TEXT (Frankenstein personas):
+   • Summary/Profile >80 words or stitching 3+ personas ("Dedicated Operations Manager... Tech-savvy Project Manager... Skilled Operation Manager...") → auto −10 on recruiterAppeal. Recruiters read 2 lines max.
+   • Repeated generic adjective stacks ("Accomplished, ambitious, influential", "Dedicated, motivated, hard-working") → flag every adjective unsupported by a metric.
+   • Infinitive-objective openings ("To design...", "Vision to create...", "Seeking a position to...") → rewrite as a noun-led positioning sentence (Role + Domain + Years + Signature Win).
+
+R. SKILLS-TAXONOMY HYGIENE:
+   • Duplicate entries within Skills/Highlights (same term twice) → flag as careless.
+   • Version-pinned legacy tools ("SolidWorks 2005", "IIS 5/6", "Windows 2000/XP", "J2ME", "8051", "Visual Basic 6") → add to outdatedTerms with modern alternatives.
+   • Mixing one-word skill tags with achievement sentences in the same block → split into "Skills" (tags only) and "Achievements" (verb + metric).
+   • Two-column "Highlights" wall with mixed tools + soft-claims ("Effective leader", "Deadline-oriented" sitting next to "Linux, VxWorks") → restructure into Skills (technical) + a separate, evidenced Leadership line.
+
+S. BULLET HYGIENE & GLYPH NOISE:
+   • Literal bullet glyphs leaking into text ("â€¢", "ï¼​", "•" prefixed inside the bullet itself) → auto −5 on formatScore; strip them.
+   • Run-on bullets containing 3+ independent ideas separated only by spaces or "Â" → split into atomic bullets, each verb-led.
+   • Inline URLs / product marketing links inside Experience bullets ("Products: http://...") → move to a Portfolio/Links section or remove.
+
+T. CLAIM ↔ EVIDENCE CONSISTENCY:
+   • Header claims "20+ years" but dated roles total <15 years → flag tenure inflation in \`weaknesses\`.
+   • "Led team of N" claimed in Summary but never substantiated in any Experience bullet → demand a substantiating bullet (team size, scope, outcome).
+   • Section names drift ("Career Overview" / "Professional Profile" / "Qualifications" / "Core Qualifications" / "Highlights" all in one CV) → recommend the standard set: Summary, Skills, Experience, Education, Certifications, Projects.
+
+
 
 ═══════════════════════════════════════════
 OUTPUT FORMAT
