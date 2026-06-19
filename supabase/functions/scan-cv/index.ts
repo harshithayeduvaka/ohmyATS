@@ -182,6 +182,27 @@ T. CLAIM ↔ EVIDENCE CONSISTENCY:
    • "Led team of N" claimed in Summary but never substantiated in any Experience bullet → demand a substantiating bullet (team size, scope, outcome).
    • Section names drift ("Career Overview" / "Professional Profile" / "Qualifications" / "Core Qualifications" / "Highlights" all in one CV) → recommend the standard set: Summary, Skills, Experience, Education, Certifications, Projects.
 
+U. CAPABILITY-TAG SOUP ("Core Qualifications" as buzzword wall):
+   • A "Core Qualifications" / "Highlights" / "Key Skills" block listing 8+ generic capability phrases ("Executive Decision Maker", "Strategic Planning & Development", "Process Design & Improvement", "Budgetary and Policy Development") with no evidence anywhere in Experience → auto −10 on recruiterAppeal. Demand each tag be either dropped or proven by a quantified bullet.
+   • Pipe-delimited mega-lines mixing tools, methods, soft skills, and domains in one paragraph ("Testing | Troubleshooting | Embedded Hardware | Project management | Logistics") → flag as un-parseable; restructure into ATS-friendly categorised lists (Languages, Tools, Methods, Domains) on separate lines.
+   • Lowercase comma-soup Skills lines ("credit, customer service, drivers, focus, forms, quick, phone") that mix verbs, nouns, and filler ("focus", "quick") → strip filler words and Title Case real tools/skills only.
+
+V. TRAINING-AS-EXPERIENCE LEAKAGE:
+   • A paragraph dumping vendor training courses ("Allen Bradley PLC 5 Intermediate, Allen Bradley Advanced Programming PLC 5, Fanuc Robotics M16iL Disassembly, ABB S4P Electrical Service, ...") inside Experience/Relevant Experience → flag; move to a dedicated "Training & Certifications" section as a bulleted list with vendor + course + year.
+   • "Skills Profile" or qualifications text embedded inside the Summary paragraph (one giant 150+ word block) → split: 2-line Summary + dedicated Skills section.
+
+W. ROLE-WITHOUT-EVIDENCE:
+   • Any Experience entry with a title + company + dates but ZERO accomplishment bullets → auto −8 on recruiterAppeal per empty role; demand at least 2 bullets (scope + outcome) or removal if irrelevant.
+   • Role bullets that repeat the company description / city / dates already in the header line ("Boyden, IA October 2012 - March 2014 Manufacturer of ...") → flag as header duplication; move company one-liner to a small italic descriptor, keep bullets for the candidate's contributions only.
+
+X. EDUCATION-LINE COLLAPSE:
+   • Degree, institution, GPA, honours, scholarships, and coursework all crammed into one run-on line ("Bachelor of Science, Sociology Business Management December 2006 Purdue University City, State Sociology Business Management 4 Softball Scholar, Dean's List recipient") → auto −5 on formatScore; restructure as: Degree — Institution — Year on line 1; Honours/GPA on line 2; Relevant coursework on line 3.
+   • "Additional Information" section containing only "(WILLING TO RELOCATE)" or duplicating Interests/Volunteer content → flag as filler; either merge into a single Personal/Logistics line in the header or remove.
+
+Y. CONTRADICTORY DOMAIN POSITIONING:
+   • Header title (e.g. "ENGINEERING TECHNOLOGIST", "ENGINEERING MANAGER") contradicted by 80% of Experience being non-engineering roles (Bartender, Dispatch Assistant, Office Manager, Medical Receptionist) → auto −15 on recruiterAppeal; require either a "Career Pivot" framing line in Summary OR pruning irrelevant roles to a single "Earlier Experience" one-liner.
+   • Summary opens with "To obtain a position..." objective statement → already covered in Q; reinforce: replace with a value-led headline tied to the target title.
+
 
 
 ═══════════════════════════════════════════
