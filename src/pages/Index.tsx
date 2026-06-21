@@ -27,7 +27,7 @@ const Index = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const handleScan = useCallback(async (cv: string, jd: string) => {
+  const handleScan = useCallback(async (cv: string, jd: string, atsTarget: string = "generic") => {
     setState("scanning");
     setScanStep(0);
     setLastCv(cv);
@@ -45,7 +45,7 @@ const Index = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke("scan-cv", {
-        body: { cv, jd },
+        body: { cv, jd, atsTarget },
       });
 
       clearInterval(stepInterval);
@@ -63,6 +63,8 @@ const Index = () => {
         sectionTips: data.sectionTips || [],
         matchSummary: data.matchSummary || undefined,
         modelsUsed: data.modelsUsed || [],
+        atsTarget: data.atsTarget,
+        atsTargetName: data.atsTargetName,
       };
 
       setScanStep(10);

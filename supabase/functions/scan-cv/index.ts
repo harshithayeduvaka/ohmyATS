@@ -6,6 +6,64 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ─── ATS profile registry (kept in sync with src/lib/atsProfiles.ts) ────
+type AtsWeights = { atsCompatibility: number; keywordMatch: number; recruiterAppeal: number; impactClarity: number; formatScore: number };
+type AtsProfile = { id: string; name: string; weights: AtsWeights; rules: string; flags: { test: (cv: string) => boolean; flag: string }[] };
+
+const ATS_PROFILES: Record<string, AtsProfile> = {
+  generic: { id: "generic", name: "Generic / Unknown ATS", weights: { atsCompatibility: 1, keywordMatch: 1, recruiterAppeal: 1, impactClarity: 1, formatScore: 1 }, rules: "No specific ATS targeted — apply strict worst-case parser assumptions.", flags: [] },
+  workday: { id: "workday", name: "Workday Recruiting", weights: { atsCompatibility: 1.15, keywordMatch: 1.25, recruiterAppeal: 0.95, impactClarity: 1.0, formatScore: 1.35 }, rules: "TARGET ATS = WORKDAY. Flattens multi-column layouts; drops right column. Strips header/footer content. Requires standard section headers ('Work Experience','Education','Skills'). Penalises non-standard sections, graphics, icons, mixed date formats. Rewards chronological single-column layouts, 'Month YYYY – Month YYYY' dates, recent keyword frequency.", flags: [
+    { test: (cv) => /\t.{0,40}\t.{0,40}\t/.test(cv) || /\|.{2,40}\|.{2,40}\|/.test(cv), flag: "Workday: multi-column / table layout detected — right column likely dropped." },
+    { test: (cv) => /[•◆◇★▪▫■□]/.test(cv), flag: "Workday: non-ASCII bullet glyphs detected — may render as garbage." },
+    { test: (cv) => !/work experience|professional experience|employment history/i.test(cv), flag: "Workday: missing standard 'Work Experience' section header — section categorisation will fail." },
+  ] },
+  greenhouse: { id: "greenhouse", name: "Greenhouse", weights: { atsCompatibility: 1.0, keywordMatch: 1.15, recruiterAppeal: 1.1, impactClarity: 1.15, formatScore: 0.95 }, rules: "TARGET ATS = GREENHOUSE. Modern Sovren-based parser, tolerant of layout. Scorecard-based competency matching — reward CVs whose bullets prove competencies. Recency weight ~1.5x. Quantified impact heavily rewarded.", flags: [] },
+  ismartrecruit: { id: "ismartrecruit", name: "iSmartRecruit", weights: { atsCompatibility: 1.0, keywordMatch: 1.05, recruiterAppeal: 1.05, impactClarity: 1.1, formatScore: 1.0 }, rules: "TARGET ATS = iSMARTRECRUIT. AI-driven semantic matching — synonyms get near-full credit. Tolerant of layout. Reward mirroring JD vocabulary with semantic depth.", flags: [] },
+  icims: { id: "icims", name: "iCIMS", weights: { atsCompatibility: 1.2, keywordMatch: 1.3, recruiterAppeal: 0.95, impactClarity: 0.95, formatScore: 1.3 }, rules: "TARGET ATS = iCIMS. Strict structural parser, breaks on graphics. Heavy keyword-frequency weighting — important keywords must repeat 2-3x. Mandatory standard section headers.", flags: [
+    { test: (cv) => cv.trim().length < 800, flag: "iCIMS: extracted text suspiciously short — possible image-only PDF iCIMS cannot parse." },
+  ] },
+  zappyhire: { id: "zappyhire", name: "Zappyhire", weights: { atsCompatibility: 1.0, keywordMatch: 1.1, recruiterAppeal: 1.15, impactClarity: 1.05, formatScore: 1.0 }, rules: "TARGET ATS = ZAPPYHIRE. AI screening + chatbot. Rewards explicit certifications, language proficiency, location stance, cultural-fit signals.", flags: [] },
+  bamboohr: { id: "bamboohr", name: "BambooHR", weights: { atsCompatibility: 0.95, keywordMatch: 1.05, recruiterAppeal: 1.1, impactClarity: 1.0, formatScore: 0.9 }, rules: "TARGET ATS = BAMBOOHR. SMB ATS, simple parser, forgiving on layout. Recruiters review manually — reward scannability.", flags: [] },
+  jazzhr: { id: "jazzhr", name: "JazzHR", weights: { atsCompatibility: 0.95, keywordMatch: 1.05, recruiterAppeal: 1.1, impactClarity: 1.0, formatScore: 0.9 }, rules: "TARGET ATS = JAZZHR. SMB ATS, basic keyword filtering, recruiter-driven ranking.", flags: [] },
+  lever: { id: "lever", name: "Lever", weights: { atsCompatibility: 1.0, keywordMatch: 1.0, recruiterAppeal: 1.2, impactClarity: 1.1, formatScore: 1.0 }, rules: "TARGET ATS = LEVER. Recruiter-driven CRM, light parser. Heavy weight on LinkedIn URL presence (auto-enrichment), clean contact block at top, clear current title.", flags: [
+    { test: (cv) => !/linkedin\.com\/in\//i.test(cv), flag: "Lever: no LinkedIn URL detected — Lever relies on LinkedIn enrichment." },
+  ] },
+  canvider: { id: "canvider", name: "Canvider", weights: { atsCompatibility: 1.05, keywordMatch: 1.2, recruiterAppeal: 1.0, impactClarity: 1.0, formatScore: 1.05 }, rules: "TARGET ATS = CANVIDER. Skill-graph matching. Rewards dedicated Skills section grouped by category; penalises skills only buried inside bullets.", flags: [] },
+  teamtailor: { id: "teamtailor", name: "Teamtailor", weights: { atsCompatibility: 0.95, keywordMatch: 0.95, recruiterAppeal: 1.2, impactClarity: 1.1, formatScore: 0.9 }, rules: "TARGET ATS = TEAMTAILOR. Modern, employer-brand focused, tolerant. Rewards personality, narrative, culture-add signals.", flags: [] },
+  pinpoint: { id: "pinpoint", name: "Pinpoint", weights: { atsCompatibility: 1.05, keywordMatch: 1.1, recruiterAppeal: 1.1, impactClarity: 1.15, formatScore: 1.0 }, rules: "TARGET ATS = PINPOINT. Structured-data parser, DEI-aware. Rewards evidence-based competencies; discounts unsupported buzzwords.", flags: [] },
+  ashby: { id: "ashby", name: "Ashby", weights: { atsCompatibility: 1.05, keywordMatch: 1.1, recruiterAppeal: 1.15, impactClarity: 1.3, formatScore: 1.05 }, rules: "TARGET ATS = ASHBY. Strong structured parser used by high-growth tech. Heavily weighs quantified impact (%,$,#,growth), recency (~2x for current role), title progression, dedicated tech-stack section. Heavily discount vague responsibility bullets.", flags: [] },
+  jarvi: { id: "jarvi", name: "Jarvi", weights: { atsCompatibility: 1.0, keywordMatch: 1.2, recruiterAppeal: 1.05, impactClarity: 0.95, formatScore: 1.0 }, rules: "TARGET ATS = JARVI (staffing). Agency recruiters search by skill tags, availability, location, contract type. Reward explicit availability, location stance, dense exact-match skill tags.", flags: [] },
+  bullhorn: { id: "bullhorn", name: "Bullhorn", weights: { atsCompatibility: 1.05, keywordMatch: 1.35, recruiterAppeal: 1.0, impactClarity: 0.9, formatScore: 1.05 }, rules: "TARGET ATS = BULLHORN. Dominant staffing CRM, Boolean-search driven. Reward exact tech names, version numbers, cert acronyms, standard job titles. Penalise creative/non-standard titles (ninja, rockstar) that miss Boolean searches.", flags: [
+    { test: (cv) => /\b(ninja|rockstar|guru|wizard|jedi)\b/i.test(cv), flag: "Bullhorn: non-standard title keywords ('ninja','rockstar',etc.) will be missed by Boolean searches." },
+  ] },
+};
+
+function getAtsProfile(id?: string | null): AtsProfile {
+  if (!id) return ATS_PROFILES.generic;
+  return ATS_PROFILES[id] || ATS_PROFILES.generic;
+}
+
+function applyAtsWeights(scores: Record<string, number>, atsId?: string | null): Record<string, number> {
+  const p = getAtsProfile(atsId);
+  const w = p.weights;
+  const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
+  const next: Record<string, number> = { ...scores };
+  next.atsCompatibility = clamp((scores.atsCompatibility ?? 0) * w.atsCompatibility);
+  next.keywordMatch = clamp((scores.keywordMatch ?? 0) * w.keywordMatch);
+  next.recruiterAppeal = clamp((scores.recruiterAppeal ?? 0) * w.recruiterAppeal);
+  next.impactClarity = clamp((scores.impactClarity ?? 0) * w.impactClarity);
+  next.formatScore = clamp((scores.formatScore ?? 0) * w.formatScore);
+  next.overall = clamp((next.atsCompatibility + next.keywordMatch + next.recruiterAppeal + next.impactClarity + next.formatScore) / 5);
+  return next;
+}
+
+function runAtsParserFlags(cv: string, atsId?: string | null): string[] {
+  const p = getAtsProfile(atsId);
+  if (!cv || !p.flags.length) return [];
+  return p.flags.filter((r) => r.test(cv)).map((r) => r.flag);
+}
+
+
 const SYSTEM_PROMPT = `You are a production-grade ATS simulation engine that replicates EXACTLY how enterprise Applicant Tracking Systems (Workday, Greenhouse, Bullhorn, Taleo, iCIMS, Lever, SmartRecruiters) parse, rank, and filter resumes — combined with a brutally honest senior recruiter with 15+ years of experience across multiple industries.
 
 IMPORTANT: You must be ROLE-AGNOSTIC. Adapt your analysis to whatever field the CV targets (engineering, marketing, data science, finance, design, healthcare, etc.). Do NOT assume any specific industry.
@@ -478,7 +536,8 @@ serve(async (req) => {
   }
 
   try {
-    const { cv, jd } = await req.json();
+    const { cv, jd, atsTarget } = await req.json();
+    const atsProfile = getAtsProfile(atsTarget);
 
     if (!cv) {
       return new Response(
@@ -502,9 +561,11 @@ serve(async (req) => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 150000); // 2.5 min for dual model
 
+    const atsBlock = `\n\n═══ TARGET ATS SIMULATION ═══\n${atsProfile.rules}\nApply the above ATS-specific parser & ranking behaviour to your scoring and flag detection. When listing format issues and weaknesses, prefix the ATS-specific ones with "${atsProfile.name}:".\n═══════════════════════════════\n`;
+
     const userContent = jd
-      ? `CV:\n${cv}\n\nTarget JD:\n${jd}\n\nPerform full ATS simulation: parse every section, match against ALL JD requirements (exact + semantic + transferable), detect similarity/differences, flag outdated terminology, identify trending skill gaps, assess role fit, and provide calibrated scores. Remember: quantified achievements should be rewarded, clean formatting should not be penalised.`
-      : `CV:\n${cv}\n\nNo JD provided. Run a standalone ATS compatibility scan — infer the target role from CV content, evaluate formatting, keyword strength for that role, impact clarity, recruiter appeal, and flag outdated terminology or missing trending skills. Set similarityScore to 0 and leave keyDifferences empty.`;
+      ? `CV:\n${cv}\n\nTarget JD:\n${jd}${atsBlock}\nPerform full ATS simulation: parse every section, match against ALL JD requirements (exact + semantic + transferable), detect similarity/differences, flag outdated terminology, identify trending skill gaps, assess role fit, and provide calibrated scores. Remember: quantified achievements should be rewarded, clean formatting should not be penalised.`
+      : `CV:\n${cv}${atsBlock}\nNo JD provided. Run a standalone ATS compatibility scan — infer the target role from CV content, evaluate formatting, keyword strength for that role, impact clarity, recruiter appeal, and flag outdated terminology or missing trending skills. Set similarityScore to 0 and leave keyDifferences empty.`;
 
     // Run BOTH models in parallel
     console.log("Starting ensemble scan: gemini-2.5-pro + openai/gpt-5");
@@ -577,6 +638,25 @@ serve(async (req) => {
       console.error("Invalid response structure:", JSON.stringify(finalResult).substring(0, 500));
       throw new Error("AI returned an invalid analysis structure");
     }
+
+    // ─── Apply ATS profile post-processing ─────────────────────────
+    if (atsProfile.id !== "generic") {
+      finalResult.scores = applyAtsWeights(finalResult.scores, atsProfile.id);
+      const extraFlags = runAtsParserFlags(typeof cv === "string" ? cv : "", atsProfile.id);
+      if (extraFlags.length) {
+        finalResult.botPass = finalResult.botPass || { formatIssues: [], extractedFields: [] };
+        const existing = finalResult.botPass.formatIssues || [];
+        finalResult.botPass.formatIssues = [...new Set([...extraFlags, ...existing])];
+      }
+      if (finalResult.matchSummary && typeof finalResult.matchSummary.matchRate === "number") {
+        // Nudge matchRate to follow the reweighted overall score (±10 band).
+        const drift = finalResult.scores.overall - finalResult.matchSummary.matchRate;
+        finalResult.matchSummary.matchRate = Math.max(0, Math.min(100, Math.round(finalResult.matchSummary.matchRate + drift * 0.5)));
+      }
+    }
+    finalResult.atsTarget = atsProfile.id;
+    finalResult.atsTargetName = atsProfile.name;
+
 
     return new Response(JSON.stringify(finalResult), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

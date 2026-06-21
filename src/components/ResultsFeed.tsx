@@ -20,20 +20,30 @@ const ResultsFeed = ({ result, cv = "", jd = "" }: ResultsFeedProps) => {
   return (
     <>
       <div className="h-full overflow-y-auto px-6 py-6 space-y-6">
-        {result.modelsUsed && result.modelsUsed.length > 0 && (
+        {(result.atsTargetName || (result.modelsUsed && result.modelsUsed.length > 0)) && (
           <div className="animate-fade-in-up flex items-center gap-2 flex-wrap" style={{ animationDelay: "0ms" }}>
-            <span className="text-xs text-muted-foreground font-mono-tech">Powered by</span>
-            {result.modelsUsed.map((model) => (
-              <span
-                key={model}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-technical/10 text-technical border border-technical/20"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                {model}
+            {result.atsTargetName && result.atsTarget && result.atsTarget !== "generic" && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                Simulated against: {result.atsTargetName}
               </span>
-            ))}
-            {result.modelsUsed.length > 1 && (
-              <span className="text-xs text-muted-foreground font-mono-tech">• Ensemble merged</span>
+            )}
+            {result.modelsUsed && result.modelsUsed.length > 0 && (
+              <>
+                <span className="text-xs text-muted-foreground font-mono-tech">Powered by</span>
+                {result.modelsUsed.map((model) => (
+                  <span
+                    key={model}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-technical/10 text-technical border border-technical/20"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                    {model}
+                  </span>
+                ))}
+                {result.modelsUsed.length > 1 && (
+                  <span className="text-xs text-muted-foreground font-mono-tech">• Ensemble merged</span>
+                )}
+              </>
             )}
           </div>
         )}
