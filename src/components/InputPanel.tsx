@@ -235,7 +235,7 @@ const InputPanel = ({ onScan, isScanning }: InputPanelProps) => {
             </div>
           )}
         </div>
-        </div>
+
 
         {/* Target ATS selector — optional */}
         <div className="flex flex-col gap-1.5">
