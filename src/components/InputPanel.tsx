@@ -1,18 +1,29 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, Briefcase, Zap, Upload, X, Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FileText, Briefcase, Zap, Upload, X, Loader2, Target } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { extractTextFromPdf } from "@/lib/pdfParser";
+import { ATS_GROUPED, getAtsProfile, type AtsId } from "@/lib/atsProfiles";
 
 interface InputPanelProps {
-  onScan: (cv: string, jd: string) => void;
+  onScan: (cv: string, jd: string, atsTarget: AtsId) => void;
   isScanning: boolean;
 }
 
 const InputPanel = ({ onScan, isScanning }: InputPanelProps) => {
   const [cv, setCv] = useState("");
   const [jd, setJd] = useState("");
+  const [atsTarget, setAtsTarget] = useState<AtsId>("generic");
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [jdFile, setJdFile] = useState<File | null>(null);
   const [cvMode, setCvMode] = useState<"text" | "file">("text");

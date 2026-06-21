@@ -68,4 +68,7 @@ export interface ScanResult {
   sectionTips?: SectionTip[];
   matchSummary?: MatchSummary;
   modelsUsed?: string[];
+  atsTarget?: string;
+  atsTargetName?: string;
 }
+
