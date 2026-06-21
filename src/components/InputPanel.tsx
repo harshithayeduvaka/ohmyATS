@@ -235,10 +235,38 @@ const InputPanel = ({ onScan, isScanning }: InputPanelProps) => {
             </div>
           )}
         </div>
+        </div>
+
+        {/* Target ATS selector — optional */}
+        <div className="flex flex-col gap-1.5">
+          <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <Target className="w-4 h-4 text-primary" />
+            Target ATS
+            <span className="text-[10px] font-normal text-muted-foreground">(optional — pick if you know which ATS the company uses)</span>
+          </label>
+          <Select value={atsTarget} onValueChange={(v) => setAtsTarget(v as AtsId)}>
+            <SelectTrigger className="bg-card border-border text-sm h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(Object.entries(ATS_GROUPED) as [string, ReturnType<typeof getAtsProfile>[]][]).map(([group, list]) => (
+                <SelectGroup key={group}>
+                  <SelectLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">{group}</SelectLabel>
+                  {list.map((p) => (
+                    <SelectItem key={p.id} value={p.id} className="text-sm">
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-[10px] text-muted-foreground leading-snug">{getAtsProfile(atsTarget).short}</p>
+        </div>
       </div>
 
       <Button
-        onClick={() => onScan(cv, jd)}
+        onClick={() => onScan(cv, jd, atsTarget)}
         disabled={!isReady}
         className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold py-3"
       >
