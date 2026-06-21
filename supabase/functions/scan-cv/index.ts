@@ -536,7 +536,8 @@ serve(async (req) => {
   }
 
   try {
-    const { cv, jd } = await req.json();
+    const { cv, jd, atsTarget } = await req.json();
+    const atsProfile = getAtsProfile(atsTarget);
 
     if (!cv) {
       return new Response(
@@ -560,9 +561,11 @@ serve(async (req) => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 150000); // 2.5 min for dual model
 
+    const atsBlock = `\n\n═══ TARGET ATS SIMULATION ═══\n${atsProfile.rules}\nApply the above ATS-specific parser & ranking behaviour to your scoring and flag detection. When listing format issues and weaknesses, prefix the ATS-specific ones with "${atsProfile.name}:".\n═══════════════════════════════\n`;
+
     const userContent = jd
-      ? `CV:\n${cv}\n\nTarget JD:\n${jd}\n\nPerform full ATS simulation: parse every section, match against ALL JD requirements (exact + semantic + transferable), detect similarity/differences, flag outdated terminology, identify trending skill gaps, assess role fit, and provide calibrated scores. Remember: quantified achievements should be rewarded, clean formatting should not be penalised.`
-      : `CV:\n${cv}\n\nNo JD provided. Run a standalone ATS compatibility scan — infer the target role from CV content, evaluate formatting, keyword strength for that role, impact clarity, recruiter appeal, and flag outdated terminology or missing trending skills. Set similarityScore to 0 and leave keyDifferences empty.`;
+      ? `CV:\n${cv}\n\nTarget JD:\n${jd}${atsBlock}\nPerform full ATS simulation: parse every section, match against ALL JD requirements (exact + semantic + transferable), detect similarity/differences, flag outdated terminology, identify trending skill gaps, assess role fit, and provide calibrated scores. Remember: quantified achievements should be rewarded, clean formatting should not be penalised.`
+      : `CV:\n${cv}${atsBlock}\nNo JD provided. Run a standalone ATS compatibility scan — infer the target role from CV content, evaluate formatting, keyword strength for that role, impact clarity, recruiter appeal, and flag outdated terminology or missing trending skills. Set similarityScore to 0 and leave keyDifferences empty.`;
 
     // Run BOTH models in parallel
     console.log("Starting ensemble scan: gemini-2.5-pro + openai/gpt-5");
