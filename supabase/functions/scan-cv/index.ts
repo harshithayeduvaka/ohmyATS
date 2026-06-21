@@ -639,6 +639,25 @@ serve(async (req) => {
       throw new Error("AI returned an invalid analysis structure");
     }
 
+    // ─── Apply ATS profile post-processing ─────────────────────────
+    if (atsProfile.id !== "generic") {
+      finalResult.scores = applyAtsWeights(finalResult.scores, atsProfile.id);
+      const extraFlags = runAtsParserFlags(typeof cv === "string" ? cv : "", atsProfile.id);
+      if (extraFlags.length) {
+        finalResult.botPass = finalResult.botPass || { formatIssues: [], extractedFields: [] };
+        const existing = finalResult.botPass.formatIssues || [];
+        finalResult.botPass.formatIssues = [...new Set([...extraFlags, ...existing])];
+      }
+      if (finalResult.matchSummary && typeof finalResult.matchSummary.matchRate === "number") {
+        // Nudge matchRate to follow the reweighted overall score (±10 band).
+        const drift = finalResult.scores.overall - finalResult.matchSummary.matchRate;
+        finalResult.matchSummary.matchRate = Math.max(0, Math.min(100, Math.round(finalResult.matchSummary.matchRate + drift * 0.5)));
+      }
+    }
+    finalResult.atsTarget = atsProfile.id;
+    finalResult.atsTargetName = atsProfile.name;
+
+
     return new Response(JSON.stringify(finalResult), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
