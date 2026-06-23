@@ -540,6 +540,8 @@ function mergeResults(a: any, b: any): any {
     keywordAnalysis,
     sectionTips,
     matchSummary: matchSummary.summary ? matchSummary : undefined,
+    // Pick the longer optimised CV text (richer rewrite wins).
+    optimizedCvText: ((a.optimizedCvText?.length ?? 0) >= (b.optimizedCvText?.length ?? 0) ? a.optimizedCvText : b.optimizedCvText) || "",
   };
 }
 
