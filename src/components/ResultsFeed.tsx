@@ -92,6 +92,12 @@ const ResultsFeed = ({ result, cv = "", jd = "" }: ResultsFeedProps) => {
           <RewriteSection rewrites={result.rewrites} />
         </div>
 
+        {result.optimizedCvText && result.optimizedCvText.trim().length > 80 && (
+          <div className="animate-fade-in-up" style={{ animationDelay: "550ms" }}>
+            <OptimizedCv text={result.optimizedCvText} />
+          </div>
+        )}
+
         {cv && (
           <div className="animate-fade-in-up" style={{ animationDelay: "600ms" }}>
             <CVComparison cv={cv} result={result} />
