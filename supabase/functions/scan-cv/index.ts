@@ -322,13 +322,15 @@ Respond with ONLY valid JSON (no markdown, no code blocks):
     "softSkillMatch": 0-100,
     "measurableImpact": 0-100,
     "summary": "2-3 sentence verdict"
-  }
+  },
+  "optimizedCvText": "THE COMPLETE REWRITTEN CV TEXT with all suggested changes applied — keep the same structure/sections but upgrade every weak bullet, inject missing JD keywords naturally, replace weak verbs with strong action verbs, add quantified impact (use bracketed placeholders like [X%] when no real figure exists — NEVER fabricate concrete metrics), enforce ATS-safe single-column plain-text formatting with canonical section headers. Output should be ready to copy-paste into a fresh document."
 }
 
 REWRITE RULES:
 - "Action Verb + Context + Quantifiable Result" framework
-- Mirror JD terminology. NEVER fabricate metrics.
+- Mirror JD terminology. NEVER fabricate metrics — use [X%], [N], [€X] placeholders if unknown.
 - Provide 4-6 rewrites targeting weakest bullets first.
+- The "optimizedCvText" field is MANDATORY when a JD is provided — produce a full ready-to-send rewrite, not a snippet.
 
 KEYWORD ANALYSIS: 10-15 keywords. For missing: specify section and natural phrasing.
 SECTION TIPS: Score each section. Reference SPECIFIC content from CV and JD.`;
