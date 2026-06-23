@@ -8,6 +8,8 @@
 export type AtsId =
   | "generic"
   | "workday"
+  | "taleo"
+  | "successfactors"
   | "greenhouse"
   | "ismartrecruit"
   | "icims"
@@ -74,6 +76,44 @@ const PROFILES: Record<AtsId, AtsProfile> = {
       { test: (cv) => /\t.{0,40}\t.{0,40}\t/.test(cv) || /\|.{2,40}\|.{2,40}\|/.test(cv), flag: "Workday: multi-column / table layout detected — right column likely dropped by parser." },
       { test: (cv) => /[•◆◇★▪▫■□]/.test(cv), flag: "Workday: non-ASCII bullet glyphs detected — may render as garbage in parsed output." },
       { test: (cv) => !/work experience|professional experience|employment history/i.test(cv), flag: "Workday: missing a standard 'Work Experience' section header — section categorisation will fail." },
+    ],
+  },
+
+  taleo: {
+    id: "taleo",
+    name: "Taleo (Oracle)",
+    group: "Enterprise",
+    short: "Legacy Fortune-500 parser. Boolean keyword logic. Hard-filters on missing must-haves.",
+    weights: { atsCompatibility: 1.15, keywordMatch: 1.35, recruiterAppeal: 0.9, impactClarity: 0.95, formatScore: 1.25 },
+    promptRules: `TARGET ATS = TALEO (Oracle). Apply Taleo-specific behaviour:
+- Legacy enterprise parser used heavily in Fortune-500 / government / banking.
+- Keyword density matters enormously — scans for exact phrase matches, weak on synonyms.
+- Sections MUST be labelled with conventional uppercase headers (EXPERIENCE, EDUCATION, SKILLS) — non-standard labels break categorisation.
+- Boolean keyword logic: missing a "required" skill = hard filter, not a soft penalty.
+- Date gaps >6 months without explanation flag as risk.
+- Penalise: graphics, tables, columns, headers/footers, special characters, PDFs without selectable text.
+- Reward: literal repetition of JD terms, exact job-title mirroring, standard section labels, chronological order.`,
+    parserFlags: [
+      { test: (cv) => /\t.{0,40}\t.{0,40}\t/.test(cv) || /\|.{2,40}\|.{2,40}\|/.test(cv), flag: "Taleo: multi-column / table layout detected — likely flattened or dropped." },
+      { test: (cv) => !/experience|employment/i.test(cv) || !/education/i.test(cv) || !/skills/i.test(cv), flag: "Taleo: missing one of the canonical section headers (EXPERIENCE / EDUCATION / SKILLS) — section parsing will degrade." },
+    ],
+  },
+
+  successfactors: {
+    id: "successfactors",
+    name: "SAP SuccessFactors",
+    group: "Enterprise",
+    short: "Structured-data parser. Skills-ontology matching. Heavy in European enterprises.",
+    weights: { atsCompatibility: 1.1, keywordMatch: 1.2, recruiterAppeal: 1.0, impactClarity: 1.0, formatScore: 1.2 },
+    promptRules: `TARGET ATS = SAP SUCCESSFACTORS. Apply SuccessFactors-specific behaviour:
+- Structured-data focus — parses dates, job-title hierarchies, and skills into a controlled ontology.
+- Skills ontology matching: skills must map to SAP's standardised skill taxonomy (industry-standard names beat creative phrasing).
+- Penalises unconventional section names; rewards canonical headers (Professional Experience, Education, Technical Skills, Languages, Certifications).
+- Heavy in European enterprises and multinationals — multilingual signals (language proficiency levels: B2/C1) and explicit EU work authorisation are noticed.
+- Reward: clear dates "Month YYYY – Month YYYY", explicit title progression, dedicated Languages and Certifications sections, standard skill names.
+- Penalise: gaps without explanation, non-standard titles, missing date ranges.`,
+    parserFlags: [
+      { test: (cv) => /\b(20\d{2})\s*-\s*(present|current)/i.test(cv) === false && /\b(present|current)\b/i.test(cv), flag: "SuccessFactors: 'Present' role missing a clean date range — title-hierarchy parser may misclassify current role." },
     ],
   },
 
@@ -281,9 +321,13 @@ export function applyAtsWeights<T extends Record<string, number>>(scores: T, ats
   next.recruiterAppeal = clamp((scores.recruiterAppeal ?? 0) * w.recruiterAppeal);
   next.impactClarity = clamp((scores.impactClarity ?? 0) * w.impactClarity);
   next.formatScore = clamp((scores.formatScore ?? 0) * w.formatScore);
-  // Overall = weighted mean of sub-scores (matches user-perceived dashboard).
+  // Overall = transparent weighted formula (keyword-dominant, matches dashboard).
   next.overall = clamp(
-    (next.atsCompatibility + next.keywordMatch + next.recruiterAppeal + next.impactClarity + next.formatScore) / 5
+    next.keywordMatch * 0.35 +
+    next.atsCompatibility * 0.20 +
+    next.recruiterAppeal * 0.20 +
+    next.impactClarity * 0.15 +
+    next.formatScore * 0.10
   );
   return next as T;
 }

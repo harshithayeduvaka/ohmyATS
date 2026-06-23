@@ -17,6 +17,11 @@ const ATS_PROFILES: Record<string, AtsProfile> = {
     { test: (cv) => /[•◆◇★▪▫■□]/.test(cv), flag: "Workday: non-ASCII bullet glyphs detected — may render as garbage." },
     { test: (cv) => !/work experience|professional experience|employment history/i.test(cv), flag: "Workday: missing standard 'Work Experience' section header — section categorisation will fail." },
   ] },
+  taleo: { id: "taleo", name: "Taleo (Oracle)", weights: { atsCompatibility: 1.15, keywordMatch: 1.35, recruiterAppeal: 0.9, impactClarity: 0.95, formatScore: 1.25 }, rules: "TARGET ATS = TALEO (Oracle). Legacy enterprise parser (Fortune 500, gov, banking). Keyword density matters enormously — exact phrase matches, weak on synonyms. Sections MUST use canonical uppercase headers (EXPERIENCE, EDUCATION, SKILLS). Boolean keyword logic: missing required skill = HARD filter. Date gaps >6mo flag as risk. Penalise graphics/tables/columns/headers/footers. Reward literal JD term repetition and exact job-title mirroring.", flags: [
+    { test: (cv) => /\t.{0,40}\t.{0,40}\t/.test(cv) || /\|.{2,40}\|.{2,40}\|/.test(cv), flag: "Taleo: multi-column / table layout detected — likely flattened or dropped." },
+    { test: (cv) => !/experience|employment/i.test(cv) || !/education/i.test(cv) || !/skills/i.test(cv), flag: "Taleo: missing one of canonical section headers (EXPERIENCE / EDUCATION / SKILLS)." },
+  ] },
+  successfactors: { id: "successfactors", name: "SAP SuccessFactors", weights: { atsCompatibility: 1.1, keywordMatch: 1.2, recruiterAppeal: 1.0, impactClarity: 1.0, formatScore: 1.2 }, rules: "TARGET ATS = SAP SUCCESSFACTORS. Structured-data parser. Parses dates, job-title hierarchies. Skills ontology matching — standardised skill names beat creative phrasing. Penalises unconventional section names; rewards canonical headers (Professional Experience, Education, Technical Skills, Languages, Certifications). Heavy in European enterprises — language proficiency levels (B2/C1) and EU work-auth signals are noticed. Reward clean date ranges and explicit title progression.", flags: [] },
   greenhouse: { id: "greenhouse", name: "Greenhouse", weights: { atsCompatibility: 1.0, keywordMatch: 1.15, recruiterAppeal: 1.1, impactClarity: 1.15, formatScore: 0.95 }, rules: "TARGET ATS = GREENHOUSE. Modern Sovren-based parser, tolerant of layout. Scorecard-based competency matching — reward CVs whose bullets prove competencies. Recency weight ~1.5x. Quantified impact heavily rewarded.", flags: [] },
   ismartrecruit: { id: "ismartrecruit", name: "iSmartRecruit", weights: { atsCompatibility: 1.0, keywordMatch: 1.05, recruiterAppeal: 1.05, impactClarity: 1.1, formatScore: 1.0 }, rules: "TARGET ATS = iSMARTRECRUIT. AI-driven semantic matching — synonyms get near-full credit. Tolerant of layout. Reward mirroring JD vocabulary with semantic depth.", flags: [] },
   icims: { id: "icims", name: "iCIMS", weights: { atsCompatibility: 1.2, keywordMatch: 1.3, recruiterAppeal: 0.95, impactClarity: 0.95, formatScore: 1.3 }, rules: "TARGET ATS = iCIMS. Strict structural parser, breaks on graphics. Heavy keyword-frequency weighting — important keywords must repeat 2-3x. Mandatory standard section headers.", flags: [
@@ -53,7 +58,14 @@ function applyAtsWeights(scores: Record<string, number>, atsId?: string | null):
   next.recruiterAppeal = clamp((scores.recruiterAppeal ?? 0) * w.recruiterAppeal);
   next.impactClarity = clamp((scores.impactClarity ?? 0) * w.impactClarity);
   next.formatScore = clamp((scores.formatScore ?? 0) * w.formatScore);
-  next.overall = clamp((next.atsCompatibility + next.keywordMatch + next.recruiterAppeal + next.impactClarity + next.formatScore) / 5);
+  // Transparent weighted overall: keyword 35% / atsCompat 20% / recruiter 20% / impact 15% / format 10%.
+  next.overall = clamp(
+    next.keywordMatch * 0.35 +
+    next.atsCompatibility * 0.20 +
+    next.recruiterAppeal * 0.20 +
+    next.impactClarity * 0.15 +
+    next.formatScore * 0.10
+  );
   return next;
 }
 
@@ -310,13 +322,15 @@ Respond with ONLY valid JSON (no markdown, no code blocks):
     "softSkillMatch": 0-100,
     "measurableImpact": 0-100,
     "summary": "2-3 sentence verdict"
-  }
+  },
+  "optimizedCvText": "THE COMPLETE REWRITTEN CV TEXT with all suggested changes applied — keep the same structure/sections but upgrade every weak bullet, inject missing JD keywords naturally, replace weak verbs with strong action verbs, add quantified impact (use bracketed placeholders like [X%] when no real figure exists — NEVER fabricate concrete metrics), enforce ATS-safe single-column plain-text formatting with canonical section headers. Output should be ready to copy-paste into a fresh document."
 }
 
 REWRITE RULES:
 - "Action Verb + Context + Quantifiable Result" framework
-- Mirror JD terminology. NEVER fabricate metrics.
+- Mirror JD terminology. NEVER fabricate metrics — use [X%], [N], [€X] placeholders if unknown.
 - Provide 4-6 rewrites targeting weakest bullets first.
+- The "optimizedCvText" field is MANDATORY when a JD is provided — produce a full ready-to-send rewrite, not a snippet.
 
 KEYWORD ANALYSIS: 10-15 keywords. For missing: specify section and natural phrasing.
 SECTION TIPS: Score each section. Reference SPECIFIC content from CV and JD.`;
@@ -526,6 +540,8 @@ function mergeResults(a: any, b: any): any {
     keywordAnalysis,
     sectionTips,
     matchSummary: matchSummary.summary ? matchSummary : undefined,
+    // Pick the longer optimised CV text (richer rewrite wins).
+    optimizedCvText: ((a.optimizedCvText?.length ?? 0) >= (b.optimizedCvText?.length ?? 0) ? a.optimizedCvText : b.optimizedCvText) || "",
   };
 }
 

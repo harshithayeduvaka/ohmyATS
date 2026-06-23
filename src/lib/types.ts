@@ -70,5 +70,6 @@ export interface ScanResult {
   modelsUsed?: string[];
   atsTarget?: string;
   atsTargetName?: string;
+  optimizedCvText?: string;
 }
 

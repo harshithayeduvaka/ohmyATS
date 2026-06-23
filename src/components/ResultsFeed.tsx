@@ -9,6 +9,7 @@ import ScanChat from "./ScanChat";
 import MatchSummaryCard from "./MatchSummaryCard";
 import SectionTips from "./SectionTips";
 import CVComparison from "./CVComparison";
+import OptimizedCv from "./OptimizedCv";
 
 interface ResultsFeedProps {
   result: ScanResult;
@@ -90,6 +91,12 @@ const ResultsFeed = ({ result, cv = "", jd = "" }: ResultsFeedProps) => {
         <div className="animate-fade-in-up" style={{ animationDelay: "500ms" }}>
           <RewriteSection rewrites={result.rewrites} />
         </div>
+
+        {result.optimizedCvText && result.optimizedCvText.trim().length > 80 && (
+          <div className="animate-fade-in-up" style={{ animationDelay: "550ms" }}>
+            <OptimizedCv text={result.optimizedCvText} />
+          </div>
+        )}
 
         {cv && (
           <div className="animate-fade-in-up" style={{ animationDelay: "600ms" }}>

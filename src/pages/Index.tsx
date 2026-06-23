@@ -65,6 +65,7 @@ const Index = () => {
         modelsUsed: data.modelsUsed || [],
         atsTarget: data.atsTarget,
         atsTargetName: data.atsTargetName,
+        optimizedCvText: data.optimizedCvText,
       };
 
       setScanStep(10);
