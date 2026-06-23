@@ -58,7 +58,14 @@ function applyAtsWeights(scores: Record<string, number>, atsId?: string | null):
   next.recruiterAppeal = clamp((scores.recruiterAppeal ?? 0) * w.recruiterAppeal);
   next.impactClarity = clamp((scores.impactClarity ?? 0) * w.impactClarity);
   next.formatScore = clamp((scores.formatScore ?? 0) * w.formatScore);
-  next.overall = clamp((next.atsCompatibility + next.keywordMatch + next.recruiterAppeal + next.impactClarity + next.formatScore) / 5);
+  // Transparent weighted overall: keyword 35% / atsCompat 20% / recruiter 20% / impact 15% / format 10%.
+  next.overall = clamp(
+    next.keywordMatch * 0.35 +
+    next.atsCompatibility * 0.20 +
+    next.recruiterAppeal * 0.20 +
+    next.impactClarity * 0.15 +
+    next.formatScore * 0.10
+  );
   return next;
 }
 
