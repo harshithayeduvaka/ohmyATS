@@ -79,6 +79,44 @@ const PROFILES: Record<AtsId, AtsProfile> = {
     ],
   },
 
+  taleo: {
+    id: "taleo",
+    name: "Taleo (Oracle)",
+    group: "Enterprise",
+    short: "Legacy Fortune-500 parser. Boolean keyword logic. Hard-filters on missing must-haves.",
+    weights: { atsCompatibility: 1.15, keywordMatch: 1.35, recruiterAppeal: 0.9, impactClarity: 0.95, formatScore: 1.25 },
+    promptRules: `TARGET ATS = TALEO (Oracle). Apply Taleo-specific behaviour:
+- Legacy enterprise parser used heavily in Fortune-500 / government / banking.
+- Keyword density matters enormously — scans for exact phrase matches, weak on synonyms.
+- Sections MUST be labelled with conventional uppercase headers (EXPERIENCE, EDUCATION, SKILLS) — non-standard labels break categorisation.
+- Boolean keyword logic: missing a "required" skill = hard filter, not a soft penalty.
+- Date gaps >6 months without explanation flag as risk.
+- Penalise: graphics, tables, columns, headers/footers, special characters, PDFs without selectable text.
+- Reward: literal repetition of JD terms, exact job-title mirroring, standard section labels, chronological order.`,
+    parserFlags: [
+      { test: (cv) => /\t.{0,40}\t.{0,40}\t/.test(cv) || /\|.{2,40}\|.{2,40}\|/.test(cv), flag: "Taleo: multi-column / table layout detected — likely flattened or dropped." },
+      { test: (cv) => !/experience|employment/i.test(cv) || !/education/i.test(cv) || !/skills/i.test(cv), flag: "Taleo: missing one of the canonical section headers (EXPERIENCE / EDUCATION / SKILLS) — section parsing will degrade." },
+    ],
+  },
+
+  successfactors: {
+    id: "successfactors",
+    name: "SAP SuccessFactors",
+    group: "Enterprise",
+    short: "Structured-data parser. Skills-ontology matching. Heavy in European enterprises.",
+    weights: { atsCompatibility: 1.1, keywordMatch: 1.2, recruiterAppeal: 1.0, impactClarity: 1.0, formatScore: 1.2 },
+    promptRules: `TARGET ATS = SAP SUCCESSFACTORS. Apply SuccessFactors-specific behaviour:
+- Structured-data focus — parses dates, job-title hierarchies, and skills into a controlled ontology.
+- Skills ontology matching: skills must map to SAP's standardised skill taxonomy (industry-standard names beat creative phrasing).
+- Penalises unconventional section names; rewards canonical headers (Professional Experience, Education, Technical Skills, Languages, Certifications).
+- Heavy in European enterprises and multinationals — multilingual signals (language proficiency levels: B2/C1) and explicit EU work authorisation are noticed.
+- Reward: clear dates "Month YYYY – Month YYYY", explicit title progression, dedicated Languages and Certifications sections, standard skill names.
+- Penalise: gaps without explanation, non-standard titles, missing date ranges.`,
+    parserFlags: [
+      { test: (cv) => /\b(20\d{2})\s*-\s*(present|current)/i.test(cv) === false && /\b(present|current)\b/i.test(cv), flag: "SuccessFactors: 'Present' role missing a clean date range — title-hierarchy parser may misclassify current role." },
+    ],
+  },
+
   greenhouse: {
     id: "greenhouse",
     name: "Greenhouse",
