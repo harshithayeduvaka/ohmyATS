@@ -321,9 +321,13 @@ export function applyAtsWeights<T extends Record<string, number>>(scores: T, ats
   next.recruiterAppeal = clamp((scores.recruiterAppeal ?? 0) * w.recruiterAppeal);
   next.impactClarity = clamp((scores.impactClarity ?? 0) * w.impactClarity);
   next.formatScore = clamp((scores.formatScore ?? 0) * w.formatScore);
-  // Overall = weighted mean of sub-scores (matches user-perceived dashboard).
+  // Overall = transparent weighted formula (keyword-dominant, matches dashboard).
   next.overall = clamp(
-    (next.atsCompatibility + next.keywordMatch + next.recruiterAppeal + next.impactClarity + next.formatScore) / 5
+    next.keywordMatch * 0.35 +
+    next.atsCompatibility * 0.20 +
+    next.recruiterAppeal * 0.20 +
+    next.impactClarity * 0.15 +
+    next.formatScore * 0.10
   );
   return next as T;
 }
