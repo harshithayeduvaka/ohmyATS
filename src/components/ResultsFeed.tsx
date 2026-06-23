@@ -9,6 +9,7 @@ import ScanChat from "./ScanChat";
 import MatchSummaryCard from "./MatchSummaryCard";
 import SectionTips from "./SectionTips";
 import CVComparison from "./CVComparison";
+import OptimizedCv from "./OptimizedCv";
 
 interface ResultsFeedProps {
   result: ScanResult;
