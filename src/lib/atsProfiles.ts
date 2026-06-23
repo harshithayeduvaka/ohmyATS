@@ -8,6 +8,8 @@
 export type AtsId =
   | "generic"
   | "workday"
+  | "taleo"
+  | "successfactors"
   | "greenhouse"
   | "ismartrecruit"
   | "icims"
