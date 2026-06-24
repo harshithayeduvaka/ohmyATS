@@ -66,6 +66,9 @@ const Index = () => {
         atsTarget: data.atsTarget,
         atsTargetName: data.atsTargetName,
         optimizedCvText: data.optimizedCvText,
+        keywordBreakdown: data.keywordBreakdown,
+        documentHealth: data.documentHealth,
+        optimizedRescan: data.optimizedRescan,
       };
 
       setScanStep(10);
