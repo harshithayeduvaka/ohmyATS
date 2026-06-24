@@ -58,6 +58,29 @@ export interface MatchSummary {
   summary: string;
 }
 
+export interface KeywordBreakdown {
+  literalScore: number; // 0-100 deterministic literal/stem hit-rate against JD
+  semanticScore: number; // 0-100 AI-judged semantic match
+  totalKeywords: number;
+  literalHits: string[];
+  literalMisses: string[];
+}
+
+export interface DocumentHealth {
+  charCount: number;
+  textDensityPerPage: number;
+  warnings: string[];
+}
+
+export interface OptimizedRescan {
+  overall: number;
+  keywordMatch: number;
+  atsCompatibility: number;
+  impactClarity: number;
+  literalScore: number;
+  delta: number;
+}
+
 export interface ScanResult {
   botPass: BotPassData;
   algorithm: AlgorithmData;
@@ -71,5 +94,8 @@ export interface ScanResult {
   atsTarget?: string;
   atsTargetName?: string;
   optimizedCvText?: string;
+  keywordBreakdown?: KeywordBreakdown;
+  documentHealth?: DocumentHealth;
+  optimizedRescan?: OptimizedRescan;
 }
 
