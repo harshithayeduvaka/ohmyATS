@@ -885,6 +885,54 @@ serve(async (req) => {
     finalResult.atsTarget = atsProfile.id;
     finalResult.atsTargetName = atsProfile.name;
 
+    // ─── Deterministic literal keyword breakdown (vs JD) ──────────────
+    const cvStr = typeof cv === "string" ? cv : "";
+    const jdStr = typeof jd === "string" ? jd : "";
+    if (jdStr) {
+      const keywords = extractJdKeywords(jdStr);
+      const { score: literalScore, hits, misses } = literalKeywordMatch(cvStr, keywords);
+      finalResult.keywordBreakdown = {
+        literalScore,
+        semanticScore: finalResult.scores?.keywordMatch ?? 0,
+        totalKeywords: keywords.length,
+        literalHits: hits,
+        literalMisses: misses,
+      };
+    }
+
+    // ─── Document health ──────────────────────────────────────────────
+    finalResult.documentHealth = documentHealth(cvStr);
+
+    // ─── Optimised-CV rescan: prove the rewrite scored higher ─────────
+    if (finalResult.optimizedCvText && finalResult.optimizedCvText.trim().length > 200) {
+      const rescanController = new AbortController();
+      const rescanTimeout = setTimeout(() => rescanController.abort(), 30000);
+      const rescanScores = await rescanOptimizedCv(
+        finalResult.optimizedCvText,
+        jdStr,
+        LOVABLE_API_KEY,
+        rescanController.signal
+      );
+      clearTimeout(rescanTimeout);
+      if (rescanScores) {
+        // Apply same ATS weights to keep comparison apples-to-apples.
+        const weighted = atsProfile.id !== "generic"
+          ? applyAtsWeights(rescanScores as Record<string, number>, atsProfile.id)
+          : rescanScores;
+        const optKeywords = jdStr ? extractJdKeywords(jdStr) : [];
+        const optLiteral = jdStr
+          ? literalKeywordMatch(finalResult.optimizedCvText, optKeywords).score
+          : 0;
+        finalResult.optimizedRescan = {
+          overall: weighted.overall ?? rescanScores.overall ?? 0,
+          keywordMatch: weighted.keywordMatch ?? rescanScores.keywordMatch ?? 0,
+          atsCompatibility: weighted.atsCompatibility ?? rescanScores.atsCompatibility ?? 0,
+          impactClarity: weighted.impactClarity ?? rescanScores.impactClarity ?? 0,
+          literalScore: optLiteral,
+          delta: (weighted.overall ?? 0) - (finalResult.scores?.overall ?? 0),
+        };
+      }
+    }
 
     return new Response(JSON.stringify(finalResult), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
