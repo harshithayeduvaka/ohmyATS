@@ -75,6 +75,218 @@ function runAtsParserFlags(cv: string, atsId?: string | null): string[] {
   return p.flags.filter((r) => r.test(cv)).map((r) => r.flag);
 }
 
+// ─── Deterministic keyword extraction & literal matching ──────────────
+const STOPWORDS = new Set([
+  "the","a","an","and","or","but","of","to","in","for","on","at","by","with","from","as","is","are","was","were","be","been","being","have","has","had","do","does","did","will","would","should","could","may","might","must","can","this","that","these","those","you","your","we","our","us","they","their","them","it","its","i","me","my","he","she","his","her","what","which","who","whom","when","where","why","how","all","any","both","each","few","more","most","other","some","such","no","nor","not","only","own","same","so","than","too","very","just","also","than","then","there","here","up","down","out","off","over","under","again","further","once","about","into","through","during","before","after","above","below","between","new","one","two","three","four","five","six","seven","eight","nine","ten","including","via","etc","eg","ie","per","across","within","while","upon","without","using","use","used","help","work","team","role","job","position","company","candidate","applicant","experience","experiences","years","year","skills","skill","ability","abilities","able","strong","good","great","excellent","preferred","required","must","should","plus","bonus","ideal","ideally","minimum","maximum","least","up","least","level","levels","based","aware","awareness","knowledge","familiar","familiarity","understanding","proficient","proficiency","working","ensure","ensuring","support","supporting","provide","providing","develop","developing","build","building","create","creating","manage","managing","drive","driving","lead","leading","own","owning","collaborate","collaborating","communicate","communication","communications","environment","environments","please","apply","application","applications","opportunity","opportunities","looking","seeking","join","joining","across","along","amongst","whilst","whether","include","includes","included","high","highly","quickly","fast","ability","including","etc","plus","also","along","every","everything","anything","something","nothing","etc","etc.",
+]);
+
+// Common synonym groups (used to count near-misses as hits for literal scoring fairness).
+const SYNONYM_GROUPS: string[][] = [
+  ["javascript","js","typescript","ts"],
+  ["postgres","postgresql","psql"],
+  ["k8s","kubernetes"],
+  ["ml","machine-learning","machinelearning"],
+  ["ai","artificial-intelligence"],
+  ["ci","cicd","ci/cd"],
+  ["aws","amazon-web-services"],
+  ["gcp","google-cloud"],
+  ["pm","project-management","program-management"],
+  ["api","apis","rest","restful"],
+  ["db","database","databases"],
+  ["sql","mysql","mariadb"],
+  ["frontend","front-end"],
+  ["backend","back-end"],
+  ["devops","dev-ops"],
+  ["b2b","business-to-business"],
+  ["b2c","business-to-consumer"],
+  ["seo","search-engine-optimization","search-engine-optimisation"],
+  ["sem","search-engine-marketing"],
+  ["kpi","kpis"],
+  ["roi","return-on-investment"],
+  ["saas","s-a-a-s"],
+  ["llm","llms","large-language-model","large-language-models"],
+  ["nlp","natural-language-processing"],
+];
+
+function normalize(s: string): string {
+  return s.toLowerCase().replace(/[^\w\s\-+#./]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function stem(w: string): string {
+  // Very light suffix stripping — keeps acronyms intact.
+  if (w.length < 4) return w;
+  return w
+    .replace(/(ies|ied)$/i, "y")
+    .replace(/(ses|sed|ses)$/i, "se")
+    .replace(/(ing|ers|ements|ments|ions|ation|ations|able|ible)$/i, "")
+    .replace(/(ed|es|s)$/i, "");
+}
+
+function extractJdKeywords(jd: string): string[] {
+  if (!jd) return [];
+  const text = normalize(jd);
+  const tokens = text.split(/\s+/);
+  // Single-word candidates
+  const wordFreq = new Map<string, number>();
+  for (const tok of tokens) {
+    const t = tok.replace(/^[-+.#/]+|[-+.#/]+$/g, "");
+    if (!t || t.length < 2) continue;
+    if (STOPWORDS.has(t)) continue;
+    if (/^\d+$/.test(t)) continue;
+    wordFreq.set(t, (wordFreq.get(t) ?? 0) + 1);
+  }
+  // 2-gram candidates (proper noun-ish: capitalised in original, or repeated)
+  const lowerJd = jd.toLowerCase();
+  const bigramFreq = new Map<string, number>();
+  for (let i = 0; i < tokens.length - 1; i++) {
+    const a = tokens[i].replace(/^[-+.#/]+|[-+.#/]+$/g, "");
+    const b = tokens[i + 1].replace(/^[-+.#/]+|[-+.#/]+$/g, "");
+    if (!a || !b) continue;
+    if (STOPWORDS.has(a) || STOPWORDS.has(b)) continue;
+    if (a.length < 3 && b.length < 3) continue;
+    const bigram = `${a} ${b}`;
+    bigramFreq.set(bigram, (bigramFreq.get(bigram) ?? 0) + 1);
+  }
+
+  // Score candidates: freq + length bonus + bigram bonus
+  const scored: { kw: string; score: number }[] = [];
+  for (const [w, f] of wordFreq) {
+    if (f < 1) continue;
+    const lengthBonus = w.length >= 5 ? 1 : 0;
+    scored.push({ kw: w, score: f * 2 + lengthBonus });
+  }
+  for (const [b, f] of bigramFreq) {
+    if (f < 1) continue;
+    scored.push({ kw: b, score: f * 3 + 1 }); // bigrams weighted higher
+  }
+  // Sort, dedupe (prefer bigram over its component words if both present), cap at 25.
+  scored.sort((a, b) => b.score - a.score);
+  const picked: string[] = [];
+  const seen = new Set<string>();
+  for (const { kw } of scored) {
+    if (seen.has(kw)) continue;
+    if (picked.length >= 25) break;
+    picked.push(kw);
+    seen.add(kw);
+  }
+  // Add explicit ALL-CAPS acronyms (3-6 chars) from the original JD — these matter for ATS.
+  const acronyms = jd.match(/\b[A-Z][A-Z0-9+#./]{1,6}\b/g) || [];
+  for (const a of acronyms) {
+    const low = a.toLowerCase();
+    if (STOPWORDS.has(low)) continue;
+    if (!picked.includes(low)) picked.unshift(low);
+  }
+  return picked.slice(0, 30);
+}
+
+function literalKeywordMatch(cv: string, keywords: string[]): { score: number; hits: string[]; misses: string[] } {
+  if (!cv || !keywords.length) return { score: 0, hits: [], misses: keywords };
+  const cvLower = " " + normalize(cv) + " ";
+  const cvStems = new Set(cvLower.split(/\s+/).map(stem));
+  const hits: string[] = [];
+  const misses: string[] = [];
+  for (const kw of keywords) {
+    const k = kw.toLowerCase().trim();
+    if (!k) continue;
+    let found = false;
+    // 1. Exact substring (word-boundaryish for single tokens)
+    if (k.includes(" ")) {
+      if (cvLower.includes(" " + k + " ") || cvLower.includes(" " + k + ".") || cvLower.includes(" " + k + ",")) {
+        found = true;
+      }
+    } else {
+      const re = new RegExp(`(^|[^\\w])${k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^\\w]|$)`, "i");
+      if (re.test(cvLower)) found = true;
+      // 2. Stem match
+      if (!found && cvStems.has(stem(k))) found = true;
+    }
+    // 3. Synonym group
+    if (!found) {
+      for (const group of SYNONYM_GROUPS) {
+        if (group.includes(k) && group.some((g) => cvLower.includes(" " + g + " "))) {
+          found = true;
+          break;
+        }
+      }
+    }
+    if (found) hits.push(kw);
+    else misses.push(kw);
+  }
+  const score = Math.round((hits.length / keywords.length) * 100);
+  return { score, hits, misses };
+}
+
+// ─── Document health: detect parsing red flags before scoring ────────
+function documentHealth(cv: string): { charCount: number; textDensityPerPage: number; warnings: string[] } {
+  const charCount = cv.length;
+  const approxPages = Math.max(1, Math.round(charCount / 2200)); // ~2200 chars per A4 page of typical CV
+  const textDensityPerPage = Math.round(charCount / approxPages);
+  const warnings: string[] = [];
+
+  if (charCount < 600) warnings.push("Extracted text is very short (<600 chars) — your PDF may be image-only or password-protected; most ATSes will reject it.");
+  if (charCount < 1500 && charCount >= 600) warnings.push("Extracted text is unusually thin — check that headings, contact block, and bullets all extract cleanly.");
+
+  // Encoding artefacts / mojibake
+  if (/[ÂÃ]\s|â€™|â€“|â€œ|â€\u009d|ï¼/.test(cv)) {
+    warnings.push("Encoding artefacts detected (mojibake like 'â€™', 'Â') — clean copy-paste source before re-uploading.");
+  }
+  // Multi-column / table heuristic
+  if (/\t.{0,40}\t.{0,40}\t/.test(cv) || /\|.{2,40}\|.{2,40}\|/.test(cv)) {
+    warnings.push("Multi-column or table layout detected — strict ATSes (Workday, Taleo, iCIMS) often drop one column entirely.");
+  }
+  // Excessive whitespace / broken line-wrap
+  const lines = cv.split("\n");
+  const shortLines = lines.filter((l) => l.trim().length > 0 && l.trim().length < 25).length;
+  if (lines.length > 30 && shortLines / lines.length > 0.55) {
+    warnings.push("PDF appears to wrap heavily into short fragments — text extraction is splitting bullets across lines and ATSes may misread them.");
+  }
+  // Missing contact basics
+  const hasEmail = /[\w.+-]+@[\w-]+\.[\w.-]+/.test(cv);
+  const hasPhone = /(\+?\d[\d\s().-]{7,}\d)/.test(cv);
+  if (!hasEmail) warnings.push("No email address detected — the contact block may have been parsed from a header/footer and stripped.");
+  if (!hasPhone) warnings.push("No phone number detected — verify contact info isn't inside an image, header, or footer.");
+
+  return { charCount, textDensityPerPage, warnings };
+}
+
+// ─── Optimised-CV rescan: prove the rewrite actually scores higher ───
+const RESCAN_PROMPT = `You are an ATS scoring engine. Given a CV (possibly a rewritten/optimised version) and a target JD, return ONLY this JSON:
+{"scores":{"overall":0-100,"atsCompatibility":0-100,"keywordMatch":0-100,"recruiterAppeal":0-100,"impactClarity":0-100,"formatScore":0-100}}
+Apply the SAME brutally honest calibration as a senior recruiter: 30-55 median, 70+ is strong, 85+ is rare. No markdown, no explanation, JSON only.`;
+
+async function rescanOptimizedCv(
+  optimizedCv: string,
+  jd: string,
+  apiKey: string,
+  signal: AbortSignal
+): Promise<{ overall: number; atsCompatibility: number; keywordMatch: number; recruiterAppeal: number; impactClarity: number; formatScore: number } | null> {
+  try {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: RESCAN_PROMPT },
+          { role: "user", content: jd ? `OPTIMISED CV:\n${optimizedCv}\n\nJD:\n${jd}` : `OPTIMISED CV:\n${optimizedCv}\n\nNo JD provided — score standalone ATS quality.` },
+        ],
+        temperature: 0.1,
+      }),
+      signal,
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) return null;
+    const m = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+    const parsed = JSON.parse((m ? m[1] : content).trim());
+    return parsed.scores ?? null;
+  } catch (e) {
+    console.error("rescanOptimizedCv failed:", e);
+    return null;
+  }
+}
+
 
 const SYSTEM_PROMPT = `You are a production-grade ATS simulation engine that replicates EXACTLY how enterprise Applicant Tracking Systems (Workday, Greenhouse, Bullhorn, Taleo, iCIMS, Lever, SmartRecruiters) parse, rank, and filter resumes — combined with a brutally honest senior recruiter with 15+ years of experience across multiple industries.
 
