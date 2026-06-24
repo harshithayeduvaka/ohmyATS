@@ -10,6 +10,7 @@ import MatchSummaryCard from "./MatchSummaryCard";
 import SectionTips from "./SectionTips";
 import CVComparison from "./CVComparison";
 import OptimizedCv from "./OptimizedCv";
+import EvidencePanel from "./EvidencePanel";
 
 interface ResultsFeedProps {
   result: ScanResult;
@@ -52,6 +53,17 @@ const ResultsFeed = ({ result, cv = "", jd = "" }: ResultsFeedProps) => {
         <div className="animate-fade-in-up" style={{ animationDelay: "50ms" }}>
           <ScoreDashboard scores={result.scores} />
         </div>
+
+        {(result.keywordBreakdown || result.documentHealth || result.optimizedRescan) && (
+          <div className="animate-fade-in-up" style={{ animationDelay: "75ms" }}>
+            <EvidencePanel
+              keywordBreakdown={result.keywordBreakdown}
+              documentHealth={result.documentHealth}
+              optimizedRescan={result.optimizedRescan}
+              originalOverall={result.scores.overall}
+            />
+          </div>
+        )}
 
         {result.matchSummary && (
           <div className="animate-fade-in-up" style={{ animationDelay: "50ms" }}>
