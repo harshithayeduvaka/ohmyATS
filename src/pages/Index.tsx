@@ -41,7 +41,7 @@ const Index = () => {
         }
         return s + 1;
       });
-    }, 1200);
+    }, 700);
 
     try {
       const { data, error } = await supabase.functions.invoke("scan-cv", {
@@ -87,7 +87,7 @@ const Index = () => {
         setResult(scanResult);
         setState("results");
         setRightView("results");
-      }, 500);
+      }, 150);
     } catch (err: any) {
       clearInterval(stepInterval);
       console.error("Scan error:", err);
