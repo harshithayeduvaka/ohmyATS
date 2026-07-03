@@ -912,35 +912,25 @@ serve(async (req) => {
     // ─── Document health ──────────────────────────────────────────────
     finalResult.documentHealth = documentHealth(cvStr);
 
-    // ─── Optimised-CV rescan: prove the rewrite scored higher ─────────
-    if (finalResult.optimizedCvText && finalResult.optimizedCvText.trim().length > 200) {
-      const rescanController = new AbortController();
-      const rescanTimeout = setTimeout(() => rescanController.abort(), 30000);
-      const rescanScores = await rescanOptimizedCv(
-        finalResult.optimizedCvText,
-        jdStr,
-        LOVABLE_API_KEY,
-        rescanController.signal
-      );
-      clearTimeout(rescanTimeout);
-      if (rescanScores) {
-        // Apply same ATS weights to keep comparison apples-to-apples.
-        const weighted = atsProfile.id !== "generic"
-          ? applyAtsWeights(rescanScores as Record<string, number>, atsProfile.id)
-          : rescanScores;
-        const optKeywords = jdStr ? extractJdKeywords(jdStr) : [];
-        const optLiteral = jdStr
-          ? literalKeywordMatch(finalResult.optimizedCvText, optKeywords).score
-          : 0;
-        finalResult.optimizedRescan = {
-          overall: weighted.overall ?? rescanScores.overall ?? 0,
-          keywordMatch: weighted.keywordMatch ?? rescanScores.keywordMatch ?? 0,
-          atsCompatibility: weighted.atsCompatibility ?? rescanScores.atsCompatibility ?? 0,
-          impactClarity: weighted.impactClarity ?? rescanScores.impactClarity ?? 0,
-          literalScore: optLiteral,
-          delta: (weighted.overall ?? 0) - (finalResult.scores?.overall ?? 0),
-        };
-      }
+    // ─── Optimised-CV rescan (deterministic only, no extra AI call) ───
+    // We synthesise an expected uplift from the literal keyword score against the
+    // rewrite, avoiding a 15-30s second AI round-trip. Users still get a Before→After delta.
+    if (finalResult.optimizedCvText && finalResult.optimizedCvText.trim().length > 200 && jdStr) {
+      const optKeywords = extractJdKeywords(jdStr);
+      const optLiteral = literalKeywordMatch(finalResult.optimizedCvText, optKeywords).score;
+      const baseLiteral = finalResult.keywordBreakdown?.literalScore ?? 0;
+      const literalGain = Math.max(0, optLiteral - baseLiteral);
+      // Modest, honest projection: keyword lift feeds ~35% of overall (matches our weights).
+      const projectedOverall = Math.min(100, Math.round((finalResult.scores?.overall ?? 0) + literalGain * 0.35));
+      finalResult.optimizedRescan = {
+        overall: projectedOverall,
+        keywordMatch: Math.min(100, (finalResult.scores?.keywordMatch ?? 0) + literalGain),
+        atsCompatibility: finalResult.scores?.atsCompatibility ?? 0,
+        impactClarity: finalResult.scores?.impactClarity ?? 0,
+        literalScore: optLiteral,
+        delta: projectedOverall - (finalResult.scores?.overall ?? 0),
+        projected: true,
+      };
     }
 
     return new Response(JSON.stringify(finalResult), {
