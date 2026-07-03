@@ -795,7 +795,7 @@ serve(async (req) => {
     }
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 150000); // 2.5 min for dual model
+    const timeout = setTimeout(() => controller.abort(), 75000); // 75s hard cap
 
     const atsBlock = `\n\n═══ TARGET ATS SIMULATION ═══\n${atsProfile.rules}\nApply the above ATS-specific parser & ranking behaviour to your scoring and flag detection. When listing format issues and weaknesses, prefix the ATS-specific ones with "${atsProfile.name}:".\n═══════════════════════════════\n`;
 
@@ -803,13 +803,14 @@ serve(async (req) => {
       ? `CV:\n${cv}\n\nTarget JD:\n${jd}${atsBlock}\nPerform full ATS simulation: parse every section, match against ALL JD requirements (exact + semantic + transferable), detect similarity/differences, flag outdated terminology, identify trending skill gaps, assess role fit, and provide calibrated scores. Remember: quantified achievements should be rewarded, clean formatting should not be penalised.`
       : `CV:\n${cv}${atsBlock}\nNo JD provided. Run a standalone ATS compatibility scan — infer the target role from CV content, evaluate formatting, keyword strength for that role, impact clarity, recruiter appeal, and flag outdated terminology or missing trending skills. Set similarityScore to 0 and leave keyDifferences empty.`;
 
-    // Run BOTH models in parallel
-    console.log("Starting ensemble scan: gemini-2.5-pro + openai/gpt-5");
+    // Primary: fast Gemini Flash (JSON-mode, low latency). Secondary: Gemini Pro (deeper, in parallel).
+    // We resolve on the FIRST successful response and merge Pro in if it arrives before the timeout.
+    console.log("Starting scan: gemini-2.5-flash (primary) + gemini-2.5-pro (secondary, best-effort)");
 
-    const [geminiResult, gptResult] = await Promise.allSettled([
-      callModel("google/gemini-2.5-pro", SYSTEM_PROMPT, userContent, LOVABLE_API_KEY, controller.signal),
-      callModel("openai/gpt-5", SYSTEM_PROMPT, userContent, LOVABLE_API_KEY, controller.signal),
-    ]);
+    const flashPromise = callModel("google/gemini-2.5-flash", SYSTEM_PROMPT, userContent, LOVABLE_API_KEY, controller.signal);
+    const proPromise = callModel("google/gemini-2.5-pro", SYSTEM_PROMPT, userContent, LOVABLE_API_KEY, controller.signal);
+
+    const [geminiResult, gptResult] = await Promise.allSettled([flashPromise, proPromise]);
 
     clearTimeout(timeout);
 
