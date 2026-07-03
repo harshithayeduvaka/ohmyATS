@@ -112,7 +112,8 @@ serve(async (req) => {
           { role: "system", content: SYSTEM_PROMPT + langInstruction + toneInstruction },
           { role: "user", content: `CV:\n${cv}\n\nJob Description:\n${jd}\n${extra}` },
         ],
-        temperature: 0.5,
+        temperature: 0.7,
+        response_format: { type: "json_object" },
       }),
       signal: controller.signal,
     });
