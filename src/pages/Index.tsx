@@ -41,7 +41,7 @@ const Index = () => {
         }
         return s + 1;
       });
-    }, 1200);
+    }, 700);
 
     try {
       const { data, error } = await supabase.functions.invoke("scan-cv", {
