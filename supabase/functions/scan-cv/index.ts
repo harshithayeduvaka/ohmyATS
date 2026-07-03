@@ -855,15 +855,15 @@ serve(async (req) => {
     if (geminiOk && gptOk) {
       console.log("Both models succeeded, merging results");
       finalResult = mergeResults(geminiOk, gptOk);
-      modelsUsed.push("Gemini 2.5 Pro", "GPT-5");
+      modelsUsed.push("Gemini 2.5 Flash", "Gemini 2.5 Pro");
     } else if (geminiOk) {
-      console.log("Only Gemini succeeded, using single result");
+      console.log("Only Flash succeeded, using single result");
       finalResult = geminiOk;
-      modelsUsed.push("Gemini 2.5 Pro");
+      modelsUsed.push("Gemini 2.5 Flash");
     } else if (gptOk) {
-      console.log("Only GPT-5 succeeded, using single result");
+      console.log("Only Pro succeeded, using single result");
       finalResult = gptOk;
-      modelsUsed.push("GPT-5");
+      modelsUsed.push("Gemini 2.5 Pro");
     } else {
       throw new Error("Both AI models failed. Please try again.");
     }
