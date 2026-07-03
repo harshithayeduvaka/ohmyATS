@@ -87,7 +87,7 @@ const Index = () => {
         setResult(scanResult);
         setState("results");
         setRightView("results");
-      }, 500);
+      }, 150);
     } catch (err: any) {
       clearInterval(stepInterval);
       console.error("Scan error:", err);
