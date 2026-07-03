@@ -568,6 +568,7 @@ async function callModel(
         { role: "user", content: userContent },
       ],
       temperature: 0.2,
+      response_format: { type: "json_object" },
     }),
     signal,
   });
@@ -583,7 +584,14 @@ async function callModel(
 
   const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
   const jsonStr = jsonMatch ? jsonMatch[1].trim() : content.trim();
-  return JSON.parse(jsonStr);
+  try {
+    return JSON.parse(jsonStr);
+  } catch {
+    const first = jsonStr.indexOf("{");
+    const last = jsonStr.lastIndexOf("}");
+    if (first >= 0 && last > first) return JSON.parse(jsonStr.slice(first, last + 1));
+    throw new Error(`Model ${model} returned non-JSON`);
+  }
 }
 
 // ─── Helper: merge two scan results ────────────────────────────────
