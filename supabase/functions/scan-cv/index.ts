@@ -771,6 +771,24 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Require a valid Supabase JWT (anon or user session) to block bot credit-draining.
+  const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+  try {
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.45.0");
+    const _supaAuth = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
+    const _token = authHeader.replace("Bearer ", "").trim();
+    const { data: _claims, error: _claimsErr } = await _supaAuth.auth.getClaims(_token);
+    if (_claimsErr || !_claims?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+  } catch (_e) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+
   try {
     const { cv, jd, atsTarget } = await req.json();
     const atsProfile = getAtsProfile(atsTarget);
