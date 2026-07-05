@@ -53,9 +53,31 @@ serve(async (req) => {
     // ===== Optional: scrape/search the company for personalization =====
     let companyResearch = "";
     const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
+
+    // SSRF guard: only allow public http(s) URLs, block internal / metadata hosts.
+    const isSafePublicUrl = (raw: string): boolean => {
+      try {
+        const u = new URL(raw);
+        if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+        const host = u.hostname.toLowerCase();
+        if (!host || host === "localhost" || host.endsWith(".local") || host.endsWith(".internal")) return false;
+        // IPv4 literal
+        const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+        if (ipv4) {
+          const [a, b] = [parseInt(ipv4[1]), parseInt(ipv4[2])];
+          if (a === 10 || a === 127 || a === 0 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 169 && b === 254) || a >= 224) return false;
+        }
+        // IPv6 literal / loopback / link-local
+        if (host.includes(":") || host === "[::1]" || host.startsWith("[fc") || host.startsWith("[fd") || host.startsWith("[fe80")) return false;
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
     if (autoResearch && FIRECRAWL_API_KEY) {
       try {
-        if (companyUrl) {
+        if (companyUrl && isSafePublicUrl(companyUrl)) {
           const scrapeRes = await fetch("https://api.firecrawl.dev/v2/scrape", {
             method: "POST",
             headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
@@ -68,6 +90,7 @@ serve(async (req) => {
             companyResearch = (sum + "\n\n" + md).slice(0, 4000);
           }
         }
+
         if (!companyResearch) {
           const searchRes = await fetch("https://api.firecrawl.dev/v2/search", {
             method: "POST",
