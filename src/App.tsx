@@ -29,6 +29,7 @@ import About from "./pages/About.tsx";
 import Privacy from "./pages/Privacy.tsx";
 import DataProcessing from "./pages/DataProcessing.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import Eval from "./pages/Eval.tsx";
 
 const queryClient = new QueryClient();
 
