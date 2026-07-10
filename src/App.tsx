@@ -29,6 +29,7 @@ import About from "./pages/About.tsx";
 import Privacy from "./pages/Privacy.tsx";
 import DataProcessing from "./pages/DataProcessing.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import Eval from "./pages/Eval.tsx";
 
 const queryClient = new QueryClient();
 
@@ -161,6 +162,7 @@ const App = () => (
                 <Route path="/about" element={withSeo("/about", <About />)} />
                 <Route path="/privacy" element={withSeo("/privacy", <Privacy />)} />
                 <Route path="/data-processing" element={withSeo("/data-processing", <DataProcessing />)} />
+                <Route path="/eval" element={<Eval />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AppLayout>

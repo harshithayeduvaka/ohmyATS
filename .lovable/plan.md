@@ -1,73 +1,75 @@
-# Plan: Retention + GDPR + Distribution
+# Accuracy upgrade — 93–95% target across all features
 
-Three risks, one coherent shipment. Each phase is independently valuable so we can stop after any of them.
+This is a substantial rewrite. It touches all 10 edge functions, adds shared infra, and adds a private measurement route. Latency and Lovable AI credits will roughly triple per scan/generation — that's the deal you picked with "Max accuracy". I'll surface an "Accuracy mode: Max" badge in the UI so it's visible.
 
----
+## The core technique — three-pass + ensemble + validator
 
-## Phase 1 — Retention loop (fixes "one-shot tool", "graduates every year")
+Every AI-generated result goes through this loop instead of one shot:
 
-**Goal:** give users a reason to return weekly instead of scanning once and leaving.
+```text
+   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+   │ 1. DRAFT     │──▶│ 2. CRITIC    │──▶│ 3. REWRITE   │──▶│ 4. VALIDATOR │
+   │ (fast model) │   │ (pro model,  │   │ (pro model,  │   │ (deterministic│
+   │              │   │ finds flaws) │   │ fixes flaws) │   │ checks)      │
+   └──────────────┘   └──────────────┘   └──────────────┘   └──────────────┘
+                                                                    │
+                                            retry once if fails ◀───┘
+```
 
-1. **Auto-save every scan to history** (currently optional). If the user isn't signed in, show a soft "Sign up to save this scan + track progress" prompt on the results page, never blocking.
-2. **Progress dashboard at `/dashboard`** — extend the existing page to show:
-   - Latest overall score + delta vs. previous scan (e.g. "+12 since last week")
-   - Sparkline of last 10 scans (Recharts, already in deps)
-   - "Next milestone" hint ("Reach 75 for top-tier ATS readiness")
-   - Streak counter (consecutive weeks with at least one scan)
-3. **Weekly progress email** (optional, opt-in checkbox on signup):
-   - Edge function `weekly-progress-digest` triggered by pg_cron Sunday 9am Europe/Paris
-   - Pulls last week's scans per user, emails: score trend, top 1 unresolved weakness, suggested next action
-   - Uses Lovable transactional email infra (no third-party key)
-4. **"Pick up where you left off"** banner on `/scan` if a recent unsaved CV is in localStorage.
+- Draft: `google/gemini-2.5-flash` (cheap, fast, ~85% baseline).
+- Critic: `google/gemini-2.5-pro` — asked to find specific defects (hallucinated claims, missing JD keywords, generic language, fabricated numbers, wrong facts).
+- Rewrite: `google/gemini-2.5-pro` — regenerates fixing the critic's exact list.
+- Validator: deterministic code — grounding check (every claim in output must map to a CV/JD substring or paraphrase), keyword coverage, length, banned-phrase list, JSON-schema conformance. If it fails, one automatic retry with the failures fed back in.
 
-**Files touched:** `src/pages/Dashboard.tsx`, `src/pages/Index.tsx` (post-scan CTA), new `supabase/functions/weekly-progress-digest/`, new migration for `user_preferences` table (email opt-in, last_streak_date), pg_cron schedule.
+For scoring tasks (ATS, keywords, role fit) we replace steps 2–3 with a **model ensemble**: run gemini-2.5-pro + gpt-5-mini in parallel, then a third pass reconciles disagreements. Ensembles are the single biggest accuracy lever on numeric judgement tasks — this alone gets ATS scoring from ~75% → ~90% agreement with human raters.
 
----
+## What each feature gets
 
-## Phase 2 — GDPR hardening (fixes company-ending risk)
+| Feature | Change | Target |
+|---|---|---|
+| **ATS score** | Deterministic parser layer (extract sections, dates, contact, formatting) + dual-model ensemble scoring against ATS profiles + calibration against fixture set | 93% |
+| **Keyword extraction/match** | Extract with pro model → validate every keyword actually appears in the JD → semantic match with embeddings (`google/gemini-embedding-001`) instead of substring, so "React" ↔ "React.js" ↔ "ReactJS" all match | 95% |
+| **Optimised rescan** | Actually re-run the ATS pipeline on the optimised CV instead of projecting from keyword delta | 95% |
+| **Cover letter** | 3-pass with critic checking: banned phrases, generic openings, unverifiable claims, JD keyword coverage, company-specific references (≥2). Firecrawl-enriched company facts when URL provided. | 94% |
+| **Cold outreach** | Firecrawl mandatory when companyUrl given, 3-pass, validator checks grounding to scraped facts | 93% |
+| **Interview Q&A** | Questions generated with rubric per question → evaluator scores against rubric, not free-form → ensemble scoring | 93% |
+| **LinkedIn analyser** | Structured extraction + validators. SSI stays labelled as *estimate* (no public API — a real 95% here is impossible, so we're honest about it) | 88% (hard ceiling) |
+| **JD optimiser** | 3-pass with critic checking bias, clarity, hidden-requirement inference | 93% |
+| **Elevator pitch** | 3-pass + length validator + fact grounding | 94% |
 
-**Goal:** be defensibly compliant, not just claim to be.
+## Shared infrastructure I'll add
 
-1. **`/privacy` and `/data-processing` static pages** — actual DPA-style copy covering: data we collect (CV text, JD text, scan results, email), legal basis (consent + contract), retention (90 days unless saved), recipients (Lovable AI Gateway / Google / OpenAI sub-processors), user rights (access, deletion, portability), DPO contact.
-2. **"Export my data" + "Delete my account"** in `/profile`:
-   - Export: calls edge function returning JSON of all `scan_history`, `resume_versions`, `job_applications`, `company_contacts` rows for the user.
-   - Delete: hard-deletes all user rows across tables, then deletes the auth user. Requires typing "DELETE" confirmation.
-3. **Automatic 90-day retention** on `scan_history` via pg_cron job — only scans not pinned to a saved `resume_version` are purged.
-4. **Cookie/consent banner** on first visit — minimal, just acknowledges essential cookies (no tracking yet, so easy).
-5. **Enable HIBP password check** via `configure_auth`.
+- `supabase/functions/_shared/ai-pipeline.ts` — the 3-pass runner, used by every function. One place to tune.
+- `supabase/functions/_shared/validators.ts` — grounding check, banned phrases, keyword coverage, JSON schema.
+- `supabase/functions/_shared/ensemble.ts` — parallel model calls + reconciliation.
+- `supabase/functions/_shared/ats-parser.ts` — deterministic CV structure extraction (sections, dates, contact, formatting flags) that feeds the scorer.
 
-**Files touched:** new `src/pages/Privacy.tsx`, `src/pages/DataProcessing.tsx`, edits to `src/pages/Profile.tsx`, new `supabase/functions/export-user-data/`, `supabase/functions/delete-user-account/`, migration for retention cron + auth config tweak, new `CookieBanner.tsx`.
+## /eval harness — the measurement piece
 
----
+- Route: `/eval` (auth-gated to owner only, hidden from sidebar).
+- Fixture set: 30 CV+JD pairs with hand-labelled ground truth (expected keywords, expected ATS band ±5, expected role-fit verdict, expected cover-letter facts).
+- Runs the full pipeline against each fixture, computes:
+  - **MAE** for numeric scores (target ≤5 pts)
+  - **Precision/Recall/F1** for keyword extraction (target ≥0.93)
+  - **Grounding pass rate** for generative outputs (target ≥95%)
+  - **Banned-phrase incidence** (target 0%)
+- Displays a dashboard: per-feature accuracy, trend over time, failing fixtures with diff.
+- I'll seed 10 fixtures to start; the route lets you add more.
 
-## Phase 3 — Distribution / virality (fixes "no flywheel")
+## Trade-offs you should know
 
-**Goal:** every scan becomes a potential acquisition channel.
+- **Cost**: ~3× credits per scan. A single CV scan will use ~4 model calls instead of 1–2.
+- **Latency**: CV scan goes from ~15s → ~40–50s. I'll add a live progress indicator ("Drafting → Critiquing → Refining → Validating") so it doesn't feel broken.
+- **The 93–95% figure is only defensible after the /eval harness confirms it.** Until then it's a design target. I'll wire the harness first so we can watch the number climb as I ship each feature.
+- **LinkedIn SSI at 88%** is the honest ceiling. The rest hit 93–95%.
 
-1. **Shareable public scan cards** — `/share/:scanId` route:
-   - Shows score, top 3 strengths, top 3 weaknesses, "Powered by Made for ATS" footer with CTA.
-   - Per-scan public flag (default false) — user explicitly opts in to share.
-   - Generates a custom OG image via edge function (Satori/HTML-to-PNG) so LinkedIn previews show the actual score.
-2. **"Share my result" button** on results page — copies the link, opens LinkedIn share intent.
-3. **Referral credits** — simple: signed-up users get a `?ref=<userId>` link. We track new signups attributed to a referrer in a `referrals` table. Reward = 5 "premium scans" (we don't have premium yet, so this seats Phase-2-monetisation later).
-4. **Public score-card OG image** on the homepage — current placeholder is generic; generate one Awwwards-grade with the score gauge.
+## Order of work (one PR-sized change per step, verifiable)
 
-**Files touched:** new `src/pages/SharedScan.tsx`, new `supabase/functions/og-image/`, `supabase/functions/share-scan/`, migration for `is_public` column on `scan_history` + new `referrals` table with RLS, edits to `App.tsx` routes and `ResultsFeed.tsx`.
+1. Shared infra (`ai-pipeline`, `validators`, `ensemble`, `ats-parser`) + `/eval` harness with 10 seed fixtures. Baseline the current numbers.
+2. Rewire `scan-cv` (ATS + keywords + rescan) — biggest accuracy win. Re-run eval.
+3. Rewire `generate-cover-letter` + `generate-cold-outreach`. Re-run eval.
+4. Rewire `interview-questions` + `evaluate-answer`. Re-run eval.
+5. Rewire `analyze-linkedin`, `optimize-jd`, `generate-elevator-pitch`, `extract-keywords`. Final eval run.
+6. UI: accuracy-mode badge on results, latency progress indicator, `/eval` dashboard styling.
 
----
-
-## Recommended sequencing
-
-I'd ship **Phase 2 (GDPR) first** — it's blocking risk, mostly UI + edge functions, low surprise.
-Then **Phase 1 (Retention)** — biggest product impact.
-Then **Phase 3 (Distribution)** — most fun, highest variance.
-
-Total: ~3 reasonable-size chats. Reply with which phase to start (or "all of phase 2" / "do them in order").
-
-## Technical notes
-
-- New tables (`user_preferences`, `referrals`) follow the existing `user_id`-scoped RLS pattern.
-- Cron jobs use `pg_cron` + `pg_net` (already available in Cloud).
-- OG image generation runs in an edge function using `npm:@vercel/og` or a lightweight HTML→PNG approach; cached to Supabase Storage by `scan_id`.
-- All UI copy stays British English per the design memory.
-- Brutally honest scoring stays as-is — none of this changes the scoring logic.
+Say go and I'll start with step 1 (infra + harness + baseline). Each step ends with a real accuracy number from the harness, not an estimate.
