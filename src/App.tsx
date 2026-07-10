@@ -162,6 +162,7 @@ const App = () => (
                 <Route path="/about" element={withSeo("/about", <About />)} />
                 <Route path="/privacy" element={withSeo("/privacy", <Privacy />)} />
                 <Route path="/data-processing" element={withSeo("/data-processing", <DataProcessing />)} />
+                <Route path="/eval" element={<Eval />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AppLayout>
