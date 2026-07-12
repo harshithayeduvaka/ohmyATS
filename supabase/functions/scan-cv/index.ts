@@ -914,8 +914,41 @@ serve(async (req) => {
     finalResult.atsTarget = atsProfile.id;
     finalResult.atsTargetName = atsProfile.name;
 
+    // ─── Deterministic anchor: parse the CV structurally and blend the ─
+    // resulting score into the AI's atsCompatibility / formatScore so a
+    // single hallucinating model can't drift the number.
+    const cvStrForParse = typeof cv === "string" ? cv : "";
+    const parsedCv = parseCV(cvStrForParse);
+    const detAts = deterministicAtsScore(parsedCv);
+    const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
+    const blend = (ai: number, det: number, aiWeight = 0.6) =>
+      clamp(ai * aiWeight + det * (1 - aiWeight));
+    finalResult.scores = finalResult.scores || {};
+    finalResult.scores.atsCompatibility = blend(finalResult.scores.atsCompatibility ?? 0, detAts.score);
+    finalResult.scores.formatScore = blend(finalResult.scores.formatScore ?? 0, detAts.score);
+    // Recompute overall with the transparent weighting used elsewhere.
+    finalResult.scores.overall = clamp(
+      (finalResult.scores.keywordMatch ?? 0) * 0.35 +
+      finalResult.scores.atsCompatibility * 0.20 +
+      (finalResult.scores.recruiterAppeal ?? 0) * 0.20 +
+      (finalResult.scores.impactClarity ?? 0) * 0.15 +
+      finalResult.scores.formatScore * 0.10
+    );
+    finalResult.deterministicAnchor = {
+      atsScore: detAts.score,
+      breakdown: detAts.breakdown,
+      hostileFlags: parsedCv.atsHostileFlags,
+    };
+    // Surface the deterministic hostile flags into botPass so users see them.
+    if (parsedCv.atsHostileFlags.length) {
+      finalResult.botPass = finalResult.botPass || { formatIssues: [], extractedFields: [] };
+      finalResult.botPass.formatIssues = [
+        ...new Set([...(finalResult.botPass.formatIssues || []), ...parsedCv.atsHostileFlags]),
+      ];
+    }
+
     // ─── Deterministic literal keyword breakdown (vs JD) ──────────────
-    const cvStr = typeof cv === "string" ? cv : "";
+    const cvStr = cvStrForParse;
     const jdStr = typeof jd === "string" ? jd : "";
     if (jdStr) {
       const keywords = extractJdKeywords(jdStr);
@@ -927,31 +960,71 @@ serve(async (req) => {
         literalHits: hits,
         literalMisses: misses,
       };
+      // Anchor keywordMatch: blend AI's semantic score with the literal hit rate.
+      finalResult.scores.keywordMatch = blend(finalResult.scores.keywordMatch ?? 0, literalScore, 0.55);
     }
 
     // ─── Document health ──────────────────────────────────────────────
     finalResult.documentHealth = documentHealth(cvStr);
 
-    // ─── Optimised-CV rescan (deterministic only, no extra AI call) ───
-    // We synthesise an expected uplift from the literal keyword score against the
-    // rewrite, avoiding a 15-30s second AI round-trip. Users still get a Before→After delta.
-    if (finalResult.optimizedCvText && finalResult.optimizedCvText.trim().length > 200 && jdStr) {
-      const optKeywords = extractJdKeywords(jdStr);
-      const optLiteral = literalKeywordMatch(finalResult.optimizedCvText, optKeywords).score;
-      const baseLiteral = finalResult.keywordBreakdown?.literalScore ?? 0;
-      const literalGain = Math.max(0, optLiteral - baseLiteral);
-      // Modest, honest projection: keyword lift feeds ~35% of overall (matches our weights).
-      const projectedOverall = Math.min(100, Math.round((finalResult.scores?.overall ?? 0) + literalGain * 0.35));
-      finalResult.optimizedRescan = {
-        overall: projectedOverall,
-        keywordMatch: Math.min(100, (finalResult.scores?.keywordMatch ?? 0) + literalGain),
-        atsCompatibility: finalResult.scores?.atsCompatibility ?? 0,
-        impactClarity: finalResult.scores?.impactClarity ?? 0,
-        literalScore: optLiteral,
-        delta: projectedOverall - (finalResult.scores?.overall ?? 0),
-        projected: true,
-      };
+    // ─── Grounding check on rewrites (drop any that hallucinate) ──────
+    if (Array.isArray(finalResult.rewrites) && finalResult.rewrites.length) {
+      const source = `${cvStr}\n${jdStr}`;
+      finalResult.rewrites = finalResult.rewrites.filter((r: any) => {
+        if (!r?.after) return false;
+        const g = checkGrounding(String(r.after), source, 0.25);
+        return g.ok;
+      });
     }
+
+    // ─── Real optimised-CV rescan (one extra AI call, worth the accuracy) ─
+    if (finalResult.optimizedCvText && finalResult.optimizedCvText.trim().length > 200) {
+      const rescanController = new AbortController();
+      const rescanTimeout = setTimeout(() => rescanController.abort(), 25000);
+      try {
+        const rescanScores = await rescanOptimizedCv(
+          finalResult.optimizedCvText,
+          jdStr,
+          LOVABLE_API_KEY,
+          rescanController.signal
+        );
+        clearTimeout(rescanTimeout);
+        if (rescanScores) {
+          // Anchor the rescan too, using the optimised CV's own parse.
+          const optParsed = parseCV(finalResult.optimizedCvText);
+          const optDet = deterministicAtsScore(optParsed);
+          const anchoredAts = blend(rescanScores.atsCompatibility ?? 0, optDet.score);
+          const anchoredFmt = blend(rescanScores.formatScore ?? 0, optDet.score);
+          let anchoredKw = rescanScores.keywordMatch ?? 0;
+          let optLiteral = 0;
+          if (jdStr) {
+            const kws = extractJdKeywords(jdStr);
+            optLiteral = literalKeywordMatch(finalResult.optimizedCvText, kws).score;
+            anchoredKw = blend(anchoredKw, optLiteral, 0.55);
+          }
+          const overall = clamp(
+            anchoredKw * 0.35 +
+            anchoredAts * 0.20 +
+            (rescanScores.recruiterAppeal ?? 0) * 0.20 +
+            (rescanScores.impactClarity ?? 0) * 0.15 +
+            anchoredFmt * 0.10
+          );
+          finalResult.optimizedRescan = {
+            overall,
+            keywordMatch: clamp(anchoredKw),
+            atsCompatibility: anchoredAts,
+            impactClarity: clamp(rescanScores.impactClarity ?? 0),
+            literalScore: optLiteral,
+            delta: overall - (finalResult.scores?.overall ?? 0),
+            projected: false,
+          };
+        }
+      } catch (e) {
+        clearTimeout(rescanTimeout);
+        console.error("optimized rescan failed:", e);
+      }
+    }
+
 
     return new Response(JSON.stringify(finalResult), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
