@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { runThreePass, tryParseJson } from "../_shared/ai-pipeline.ts";
+import { checkBannedPhrases, checkGrounding, checkWordCount, combineValidators } from "../_shared/validators.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -108,17 +110,7 @@ serve(async (req) => {
       }
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      signal: controller.signal,
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        temperature: 0.4,
-        messages: [
-          {
-            role: "system",
-            content: `You are writing a ${channelType === "linkedin" ? "LinkedIn message" : "cold email"} as the candidate themselves — not as a marketer, not as an AI. Tone: warm, conversational, human. ${toneType}.
+    const systemPrompt = `You are writing a ${channelType === "linkedin" ? "LinkedIn message" : "cold email"} as the candidate themselves — not as a marketer, not as an AI. Tone: warm, conversational, human. ${toneType}.
 
 Hard rules — break any of these and the message fails:
 - MAX ${channelType === "linkedin" ? "80 words" : "90 words"}. Shorter is better. Cut every word that isn't pulling weight.
@@ -146,31 +138,50 @@ Return ONLY valid JSON:
   "tips": ["1-3 short tips to lift response rate"],
   "personalizationHooks": ["the specific hooks used"],
   "pillarsCovered": { "fit": "one-line fit summary", "value": "one-line value summary", "whyGreat": "one-line why-now summary" }
-}${langInstruction}`
-          },
-          {
-            role: "user",
-            content: `Recipient: ${recipientName}\nRole: ${recipientRole || "Hiring Manager"}\nCompany: ${companyName}\nChannel: ${channelType}\nTone: ${toneType}\nOutput Language: ${lang}${cv ? `\n\nMy CV:\n${cv}` : ""}${jd ? `\n\nJob Description:\n${jd}` : ""}${companyResearch ? `\n\nCompany Research (use to personalize the WHERE-I-FIT and WHY-GREAT-FIT pillars):\n${companyResearch}` : ""}`
-          }
-        ],
-      }),
-    });
+}${langInstruction}`;
 
-    clearTimeout(timeout);
+    const userPrompt = `Recipient: ${recipientName}\nRole: ${recipientRole || "Hiring Manager"}\nCompany: ${companyName}\nChannel: ${channelType}\nTone: ${toneType}\nOutput Language: ${lang}${cv ? `\n\nMy CV:\n${cv}` : ""}${jd ? `\n\nJob Description:\n${jd}` : ""}${companyResearch ? `\n\nCompany Research (use to personalize the WHERE-I-FIT and WHY-GREAT-FIT pillars):\n${companyResearch}` : ""}`;
 
-    if (!response.ok) {
-      const status = response.status;
-      if (status === 429) return new Response(JSON.stringify({ error: "Rate limited. Try again shortly." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      if (status === 402) return new Response(JSON.stringify({ error: "Credits exhausted." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      throw new Error(`AI gateway error: ${status}`);
+    const source = `${cv || ""}\n${jd || ""}\n${companyName}\n${companyResearch}`;
+    const maxWords = channelType === "linkedin" ? 80 : 90;
+
+    type OutreachOut = {
+      subject?: string; message: string; connectionNote?: string;
+      followUp?: string; tips?: string[]; personalizationHooks?: string[];
+      pillarsCovered?: Record<string, string>;
+    };
+
+    try {
+      const { output } = await runThreePass<OutreachOut>({
+        systemPrompt,
+        userPrompt,
+        critiquePrompt:
+          "Score this outreach message as a busy hiring manager who gets 50 of these a day. Flag: (a) any banned phrase, (b) throat-clearing openers about the sender, (c) any claim not grounded in the CV or provided research, (d) fabricated numbers, (e) generic openings that could go to any company, (f) message body over the word cap, (g) vague asks like 'connect' or 'explore opportunities'. PASS only if truly tight.",
+        parse: (raw) => tryParseJson<OutreachOut>(raw),
+        validate: (out) => {
+          const body = out.message ?? "";
+          return combineValidators([
+            checkBannedPhrases(body),
+            checkWordCount(body, 25, maxWords + 15),
+            checkGrounding(body, source, 0.28),
+          ]);
+        },
+        draftModel: "flash",
+        refineModel: "pro",
+        temperature: 0.5,
+        jsonMode: true,
+        maxRetries: 1,
+      });
+      clearTimeout(timeout);
+      return new Response(JSON.stringify(output), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    } catch (pipelineErr: any) {
+      clearTimeout(timeout);
+      const msg = String(pipelineErr?.message ?? pipelineErr);
+      if (msg.includes("429")) return new Response(JSON.stringify({ error: "Rate limited. Try again shortly." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (msg.includes("402")) return new Response(JSON.stringify({ error: "Credits exhausted." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      throw pipelineErr;
     }
 
-    const data = await response.json();
-    let content = data.choices?.[0]?.message?.content || "";
-    const jsonMatch = content.match(/```json\s*([\s\S]*?)```/) || content.match(/\{[\s\S]*\}/);
-    const parsed = JSON.parse(jsonMatch?.[1] || jsonMatch?.[0] || content);
-
-    return new Response(JSON.stringify(parsed), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("cold-outreach error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
