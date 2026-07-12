@@ -126,47 +126,49 @@ serve(async (req) => {
       `Output Language: ${lang}`,
     ].filter(Boolean).join("\n");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT + langInstruction + toneInstruction },
-          { role: "user", content: `CV:\n${cv}\n\nJob Description:\n${jd}\n${extra}` },
-        ],
-        temperature: 0.7,
-        response_format: { type: "json_object" },
-      }),
-      signal: controller.signal,
-    });
+    const userPrompt = `CV:\n${cv}\n\nJob Description:\n${jd}\n${extra}`;
+    const systemPrompt = SYSTEM_PROMPT + langInstruction + toneInstruction;
+    const source = `${cv}\n${jd}${companyName ? `\n${companyName}` : ""}`;
 
-    clearTimeout(timeout);
+    type CoverLetterOut = { coverLetter: string; keyHighlights?: string[]; tone?: string; wordCount?: number };
 
-    if (!response.ok) {
-      if (response.status === 429) return new Response(JSON.stringify({ error: "Rate limit exceeded." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      if (response.status === 402) return new Response(JSON.stringify({ error: "AI usage limit reached." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      throw new Error(`AI gateway error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
-    if (!content) throw new Error("No content in AI response");
-
-    let parsed;
     try {
-      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      parsed = JSON.parse(jsonMatch ? jsonMatch[1].trim() : content.trim());
-    } catch {
-      throw new Error("Failed to parse cover letter result");
+      const { output } = await runThreePass<CoverLetterOut>({
+        systemPrompt,
+        userPrompt,
+        critiquePrompt:
+          "Score the cover letter as a senior recruiter would. Flag: (a) any banned/generic phrase (passionate, dynamic, results-driven, I am writing to apply, thrilled, etc.), (b) any claim not backed by the CV, (c) generic openings that could apply to any company, (d) missing company-specific reference, (e) fabricated numbers, (f) length outside 220–280 words, (g) parroting the role title back verbatim. Output PASS only if none apply.",
+        parse: (raw) => tryParseJson<CoverLetterOut>(raw),
+        validate: (out) => {
+          const body = out.coverLetter ?? "";
+          return combineValidators([
+            checkBannedPhrases(body),
+            checkWordCount(body, 200, 320),
+            checkGrounding(body, source, 0.22),
+            checkCompanyMentions(body, companyName, companyName ? 1 : 0),
+          ]);
+        },
+        draftModel: "flash",
+        refineModel: "pro",
+        temperature: 0.6,
+        jsonMode: true,
+        maxRetries: 1,
+      });
+
+      if (!output?.coverLetter) throw new Error("Pipeline returned no cover letter");
+      const wc = output.coverLetter.trim().split(/\s+/).length;
+      clearTimeout(timeout);
+      return new Response(JSON.stringify({ ...output, wordCount: wc }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (pipelineErr: any) {
+      clearTimeout(timeout);
+      const msg = String(pipelineErr?.message ?? pipelineErr);
+      if (msg.includes("429")) return new Response(JSON.stringify({ error: "Rate limit exceeded." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (msg.includes("402")) return new Response(JSON.stringify({ error: "AI usage limit reached." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      throw pipelineErr;
     }
 
-    return new Response(JSON.stringify(parsed), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   } catch (e) {
     if (e instanceof DOMException && e.name === "AbortError") {
       return new Response(JSON.stringify({ error: "Request timed out." }), { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } });
