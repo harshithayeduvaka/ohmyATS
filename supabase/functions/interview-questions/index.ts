@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { runThreePass, tryParseJson } from "../_shared/ai-pipeline.ts";
+import { checkGrounding, combineValidators, type ValidatorResult } from "../_shared/validators.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,12 +8,24 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+interface QuestionOut {
+  question: string;
+  category: string;
+  difficulty: string;
+  whyAsked: string;
+  suggestedAnswer?: string;
+  rubric?: string[];
+  tips: string[];
+}
+interface QuestionsPayload {
+  questions: QuestionOut[];
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Require a valid Supabase JWT (anon or user session) to block bot credit-draining.
   const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -28,10 +42,9 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-
   try {
     const body = await req.json();
-    const { cv, jd, role, companyName, companySector, interviewType, mode, language } = body;
+    const { cv, jd, role, companyName, companySector, interviewType, language } = body;
 
     if (!jd) {
       return new Response(
@@ -51,42 +64,21 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000);
-
     const lang = language === "french" ? "French" : "English";
     const langInstruction = language === "french"
-      ? `\n\nIMPORTANT: Write ALL output (questions, answers, tips, whyAsked, categories) in French.`
+      ? `\n\nIMPORTANT: Write ALL output (questions, answers, rubric, tips, whyAsked, categories) in French.`
       : "";
 
-    let systemPrompt: string;
-    let userContent: string;
-
-    if (mode === "evaluate") {
-      const { question, answer } = await req.json().catch(() => ({ question: "", answer: "" }));
-      systemPrompt = `You are a senior hiring manager conducting interviews. Evaluate this answer honestly.
-Respond with ONLY valid JSON:
-{
-  "score": 0-10,
-  "feedback": "specific feedback",
-  "idealAnswer": "what a strong answer would look like",
-  "tips": ["actionable tips"]
-}${langInstruction}`;
-      userContent = `Role: ${role}\nJD: ${jd}\n${cv ? `CV: ${cv}` : ""}\n\nQuestion: ${question}\nCandidate Answer: ${answer}\n\nOutput Language: ${lang}`;
-    } else {
-      const interviewTypeInstruction = interviewType
-        ? `The interview type is "${interviewType}". Adjust question style accordingly:
+    const interviewTypeInstruction = interviewType
+      ? `The interview type is "${interviewType}". Adjust question style accordingly:
 - "HR" = behavioral, motivation, culture fit, salary expectations, career goals
 - "Technical" = hard skills, problem-solving, case studies, domain expertise
 - "Coffee Chat" = casual, conversational, exploratory, company culture, mutual fit
 - "Chat with the Founder" = vision alignment, entrepreneurial thinking, big-picture strategy, passion for the mission
 - For any other type, adapt the tone and question style to match what "${interviewType}" implies.`
-        : "";
+      : "";
 
-      systemPrompt = `You are a senior hiring manager. Generate realistic interview questions for this role.
+    const systemPrompt = `You are a senior hiring manager. Generate realistic interview questions for this role.
 Include a mix of questions appropriate for the interview context.
 ${companyName ? `The company is "${companyName}". Tailor questions to reflect what this specific company values and how they typically interview.` : ""}
 ${companySector ? `The industry/sector is "${companySector}". Include sector-specific questions that test domain knowledge and industry awareness.` : ""}
@@ -94,6 +86,8 @@ ${interviewTypeInstruction}
 ${cv ? "Also provide suggested answers based STRICTLY on the candidate's CV. Do NOT fabricate or assume any experience, skills, projects, or achievements that are not explicitly mentioned in the CV. If the CV doesn't contain relevant experience for a question, say so honestly in the suggested answer and guide the candidate on how to frame transferable skills from what IS in their CV." : ""}
 
 CRITICAL: Every suggested answer MUST be directly traceable to specific content in the candidate's CV. Never invent metrics, projects, company names, or experiences.
+
+For EACH question, also produce a "rubric": 3-5 concrete criteria a strong answer must satisfy (e.g. "Uses STAR structure", "Cites a quantified outcome", "Names a specific stakeholder"). The rubric will be used to score candidate answers deterministically.
 
 Respond with ONLY valid JSON:
 {
@@ -104,53 +98,56 @@ Respond with ONLY valid JSON:
       "difficulty": "easy|medium|hard",
       "whyAsked": "what the interviewer is really assessing",
       ${cv ? '"suggestedAnswer": "tailored answer using CV experience",' : ""}
+      "rubric": ["criterion 1", "criterion 2", "criterion 3"],
       "tips": ["tips for answering well"]
     }
   ]
 }
 
 Generate 8-10 questions ordered from warm-up to tough.${langInstruction}`;
-      userContent = `Role: ${role || "Not specified"}\n${companyName ? `Company: ${companyName}\n` : ""}${companySector ? `Sector: ${companySector}\n` : ""}${interviewType ? `Interview Type: ${interviewType}\n` : ""}\nJob Description:\n${jd}\n${cv ? `\nCandidate CV:\n${cv}` : ""}\n\nOutput Language: ${lang}`;
-    }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
+    const userContent = `Role: ${role || "Not specified"}\n${companyName ? `Company: ${companyName}\n` : ""}${companySector ? `Sector: ${companySector}\n` : ""}${interviewType ? `Interview Type: ${interviewType}\n` : ""}\nJob Description:\n${jd}\n${cv ? `\nCandidate CV:\n${cv}` : ""}\n\nOutput Language: ${lang}`;
+
+    const critiquePrompt = `Check: (1) 8-10 questions present, (2) every question has a rubric with 3+ criteria, (3) ${cv ? "every suggestedAnswer is grounded in the CV — no invented companies, metrics, or projects, " : ""}(4) questions match the interview type "${interviewType || "general"}", (5) no generic filler questions, (6) whyAsked reveals a real assessment goal.`;
+
+    const source = `${cv || ""}\n${jd}\n${companyName || ""}\n${companySector || ""}`;
+
+    const { output } = await runThreePass<QuestionsPayload>({
+      systemPrompt,
+      userPrompt: userContent,
+      critiquePrompt,
+      parse: (raw) => {
+        const p = tryParseJson<QuestionsPayload>(raw);
+        if (!p || !Array.isArray(p.questions) || p.questions.length === 0) return null;
+        return p;
       },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
-        temperature: 0.4,
-      }),
-      signal: controller.signal,
+      validate: (out): ValidatorResult => {
+        const results: ValidatorResult[] = [];
+        if (out.questions.length < 6) {
+          results.push({ ok: false, issues: [`Only ${out.questions.length} questions (need 6+)`] });
+        }
+        const missingRubric = out.questions.filter((q) => !Array.isArray(q.rubric) || (q.rubric?.length ?? 0) < 3);
+        if (missingRubric.length > 0) {
+          results.push({ ok: false, issues: [`${missingRubric.length} questions missing 3+ rubric criteria`] });
+        }
+        if (cv) {
+          const answersText = out.questions
+            .map((q) => q.suggestedAnswer ?? "")
+            .join("\n");
+          if (answersText.trim().length > 0) {
+            results.push(checkGrounding(answersText, source, 0.3));
+          }
+        }
+        return combineValidators(results);
+      },
+      draftModel: "flash",
+      refineModel: "pro",
+      temperature: 0.4,
+      jsonMode: true,
+      maxRetries: 1,
     });
 
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      if (response.status === 429) return new Response(JSON.stringify({ error: "Rate limit exceeded." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      if (response.status === 402) return new Response(JSON.stringify({ error: "AI usage limit reached." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      throw new Error(`AI gateway error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
-    if (!content) throw new Error("No content in AI response");
-
-    let parsed;
-    try {
-      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      parsed = JSON.parse(jsonMatch ? jsonMatch[1].trim() : content.trim());
-    } catch {
-      throw new Error("Failed to parse interview questions result");
-    }
-
-    return new Response(JSON.stringify(parsed), {
+    return new Response(JSON.stringify(output), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
@@ -158,9 +155,11 @@ Generate 8-10 questions ordered from warm-up to tough.${langInstruction}`;
       return new Response(JSON.stringify({ error: "Request timed out." }), { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     console.error("interview-questions error:", e);
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    const status = /429/.test(msg) ? 429 : /402/.test(msg) ? 402 : 500;
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: msg }),
+      { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
