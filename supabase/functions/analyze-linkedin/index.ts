@@ -1,30 +1,41 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { runThreePass, tryParseJson } from "../_shared/ai-pipeline.ts";
+import { checkGrounding } from "../_shared/validators.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+interface LinkedInOut {
+  overallScore: number;
+  scores: Record<string, number>;
+  headline: { current: string; suggested: string; feedback: string };
+  summary: { current: string; suggested: string; feedback: string };
+  experienceIssues: { section: string; issue: string; fix: string }[];
+  missingKeywords: string[];
+  strengths: string[];
+  weaknesses: string[];
+  quickWins: string[];
+  contentStrategy: { postIdeas: string[]; engagementTips: string[]; networkingAdvice: string[] };
+  ssiEstimate: { score: number; breakdown: Record<string, number>; tips: string[] };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  // Require a valid Supabase JWT (anon or user session) to block bot credit-draining.
   const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
   try {
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.45.0");
-    const _supaAuth = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
-    const _token = authHeader.replace("Bearer ", "").trim();
-    const { data: _claims, error: _claimsErr } = await _supaAuth.auth.getClaims(_token);
-    if (_claimsErr || !_claims?.claims) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-  } catch (_e) {
+    const supa = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
+    const { data: claims, error } = await supa.auth.getClaims(authHeader.replace("Bearer ", "").trim());
+    if (error || !claims?.claims) throw new Error("bad claims");
+  } catch {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
-
 
   try {
     const { profileText, targetRole, industry } = await req.json();
@@ -37,91 +48,44 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Payload too large." }), { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 90000);
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      signal: controller.signal,
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        temperature: 0.3,
-        messages: [
-          {
-            role: "system",
-            content: `You are a LinkedIn profile optimization coach. Analyze the provided LinkedIn profile text and give brutally honest, actionable feedback.${targetRole ? ` The user is targeting: ${targetRole}.` : ""}${industry ? ` Industry: ${industry}.` : ""}
+    const { output } = await runThreePass<LinkedInOut>({
+      systemPrompt: `You are a LinkedIn profile optimisation coach. Analyse the provided LinkedIn profile and give brutally honest, actionable feedback.${targetRole ? ` Target: ${targetRole}.` : ""}${industry ? ` Industry: ${industry}.` : ""}
 
 Score harshly. Most profiles score 30-55. Only truly exceptional profiles score 70+.
-
-CRITICAL: For EVERY weakness and issue you identify, you MUST provide a specific, copy-paste-ready fix. Do not just say "your headline is weak" — provide the exact replacement text.
+CRITICAL: For EVERY weakness, provide a specific, copy-paste-ready fix (exact replacement text). Never invent achievements, employers, or metrics not in the profile.
 
 Return ONLY valid JSON:
 {
   "overallScore": number 1-100,
-  "scores": {
-    "headline": number 1-100,
-    "summary": number 1-100,
-    "experience": number 1-100,
-    "skills": number 1-100,
-    "keywords": number 1-100,
-    "completeness": number 1-100
-  },
-  "headline": {
-    "current": "their current headline or 'Not found'",
-    "suggested": "optimized headline - ready to copy-paste",
-    "feedback": "why the change"
-  },
-  "summary": {
-    "current": "brief summary of their current about section",
-    "suggested": "complete optimized about section - ready to copy-paste",
-    "feedback": "what's wrong and why"
-  },
-  "experienceIssues": [{"section": "which role", "issue": "what's wrong", "fix": "exact rewritten text they should use instead"}],
-  "missingKeywords": ["keywords they should add for their target role"],
-  "strengths": ["what's good about the profile"],
-  "weaknesses": ["what needs fixing - be specific"],
-  "quickWins": ["easy changes with immediate impact - include exact text to add/change"],
-  "contentStrategy": {
-    "postIdeas": ["3-5 post topic ideas for their niche"],
-    "engagementTips": ["tips to increase visibility"],
-    "networkingAdvice": ["who to connect with and how"]
-  },
-  "ssiEstimate": {
-    "score": number 1-100,
-    "breakdown": {
-      "professionalBrand": number 1-25,
-      "rightPeople": number 1-25,
-      "engageInsights": number 1-25,
-      "buildRelationships": number 1-25
-    },
-    "tips": ["how to improve SSI"]
-  }
-}`
-          },
-          { role: "user", content: `LinkedIn Profile:\n${profileText}` }
-        ],
-      }),
+  "scores": {"headline": number, "summary": number, "experience": number, "skills": number, "keywords": number, "completeness": number},
+  "headline": {"current": string, "suggested": string, "feedback": string},
+  "summary": {"current": string, "suggested": string, "feedback": string},
+  "experienceIssues": [{"section": string, "issue": string, "fix": string}],
+  "missingKeywords": [string],
+  "strengths": [string],
+  "weaknesses": [string],
+  "quickWins": [string],
+  "contentStrategy": {"postIdeas": [string], "engagementTips": [string], "networkingAdvice": [string]},
+  "ssiEstimate": {"score": number 1-100, "breakdown": {"professionalBrand": number, "rightPeople": number, "engageInsights": number, "buildRelationships": number}, "tips": [string]}
+}`,
+      userPrompt: `LinkedIn Profile:\n${profileText}`,
+      critiquePrompt:
+        "Flag any suggested headline/summary that fabricates employers, titles, metrics, or claims not in the profile. Flag scores that seem inflated (average profile should be 30-55). Flag any experienceIssues.fix that isn't concrete copy-paste text.",
+      parse: (raw) => tryParseJson<LinkedInOut>(raw),
+      validate: (o) => {
+        const issues: string[] = [];
+        if (typeof o.overallScore !== "number") issues.push("overallScore missing");
+        if (o.overallScore > 85) issues.push("overallScore suspiciously high — rescore harshly");
+        const suggested = `${o.headline?.suggested ?? ""}\n${o.summary?.suggested ?? ""}`;
+        const g = checkGrounding(suggested, `${profileText}\n${targetRole ?? ""}\n${industry ?? ""}`, 0.35);
+        if (!g.ok) issues.push(...g.issues);
+        return issues.length ? { ok: false, issues } : { ok: true };
+      },
+      jsonMode: true,
+      temperature: 0.3,
     });
 
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      const status = response.status;
-      if (status === 429) return new Response(JSON.stringify({ error: "Rate limited. Try again shortly." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      if (status === 402) return new Response(JSON.stringify({ error: "Credits exhausted." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      throw new Error(`AI gateway error: ${status}`);
-    }
-
-    const data = await response.json();
-    let content = data.choices?.[0]?.message?.content || "";
-    const jsonMatch = content.match(/```json\s*([\s\S]*?)```/) || content.match(/\{[\s\S]*\}/);
-    const parsed = JSON.parse(jsonMatch?.[1] || jsonMatch?.[0] || content);
-
-    return new Response(JSON.stringify(parsed), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify(output), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("analyze-linkedin error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
