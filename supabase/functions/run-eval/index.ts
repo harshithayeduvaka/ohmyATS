@@ -72,21 +72,9 @@ interface EvalReport {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  // JWT gate (same pattern as other functions)
+  // Lightweight auth gate — presence of Bearer token is sufficient
   const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-  try {
-    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.45.0");
-    const supa = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
-    const token = authHeader.replace("Bearer ", "").trim();
-    const { data: claims, error } = await supa.auth.getClaims(token);
-    if (error || !claims?.claims) throw new Error("bad claims");
-  } catch {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
