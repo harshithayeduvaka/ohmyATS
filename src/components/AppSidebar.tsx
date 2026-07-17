@@ -4,7 +4,7 @@ import {
   Home, Search, FileText, MessageSquare, HelpCircle, History,
   FileSearch, Zap, Mail, Linkedin, ClipboardList, Building2,
   StickyNote, Globe, Mic, User, MessageCircle,
-  Info, Sparkles, Settings, Target
+  Info, Sparkles, Settings, Target, Activity
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarHeader, SidebarFooter,
@@ -41,6 +41,7 @@ const bottomNav = [
   { title: "About", icon: Info, href: "/about" },
   { title: "Profile", icon: User, href: "/profile" },
   { title: "Support", icon: MessageCircle, href: "/support" },
+  { title: "Accuracy Eval", icon: Activity, href: "/eval", badge: "Dev" },
 ];
 
 const AppSidebar = () => {
