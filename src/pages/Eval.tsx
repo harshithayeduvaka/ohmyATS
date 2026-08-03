@@ -5,30 +5,35 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { EVAL_FIXTURES } from "@/lib/evalFixtures";
+import { EVAL_FIXTURES, FEATURE_LABELS, type EvalFeature } from "@/lib/evalFixtures";
+
+interface Accuracy {
+  atsMae: number;
+  atsInBandRate: number;
+  keywordF1: number;
+  keywordPrecision: number;
+  keywordRecall: number;
+  groundingPassRate: number;
+  bannedPhraseRate: number;
+  overall: number;
+}
 
 interface EvalReport {
   ranAt: string;
   fixtureCount: number;
-  accuracy: {
-    atsMae: number;
-    atsInBandRate: number;
-    keywordF1: number;
-    keywordPrecision: number;
-    keywordRecall: number;
-    groundingPassRate: number;
-    bannedPhraseRate: number;
-    overall: number;
-  };
+  accuracy: Accuracy;
+  byFeature?: Array<{ feature: string; fixtureCount: number; accuracy: Accuracy }>;
   fixtures: Array<{
     id: string;
     label: string;
+    feature?: string;
     ats: { predicted: number; band: [number, number]; inBand: boolean; error: number };
     keywordExtraction: { predicted: string[]; expected: string[]; precision: number; recall: number; f1: number };
     grounding: { passed: boolean; issues: string[] };
     bannedPhrases: { passed: boolean; hits: string[] };
   }>;
 }
+
 
 const Eval = () => {
   const { user, loading: authLoading } = useAuth();
