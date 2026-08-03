@@ -14,6 +14,7 @@ const corsHeaders = {
 interface Fixture {
   id: string;
   label: string;
+  feature?: string;
   cv: string;
   jd: string;
   truth: {
@@ -29,6 +30,7 @@ interface Fixture {
 interface FixtureResult {
   id: string;
   label: string;
+  feature: string;
   ats: {
     predicted: number;
     band: [number, number];
@@ -53,21 +55,55 @@ interface FixtureResult {
   };
 }
 
+interface Accuracy {
+  atsMae: number;              // mean absolute error from band
+  atsInBandRate: number;       // 0..1
+  keywordF1: number;           // macro-avg F1
+  keywordPrecision: number;
+  keywordRecall: number;
+  groundingPassRate: number;
+  bannedPhraseRate: number;    // proportion of fixtures with ≥1 banned phrase
+  overall: number;             // 0..100 composite
+}
+
 interface EvalReport {
   ranAt: string;
   fixtureCount: number;
-  accuracy: {
-    atsMae: number;              // mean absolute error from band
-    atsInBandRate: number;       // 0..1
-    keywordF1: number;           // macro-avg F1
-    keywordPrecision: number;
-    keywordRecall: number;
-    groundingPassRate: number;
-    bannedPhraseRate: number;    // proportion of fixtures with ≥1 banned phrase
-    overall: number;             // 0..100 composite
-  };
+  accuracy: Accuracy;
+  byFeature: Array<{ feature: string; fixtureCount: number; accuracy: Accuracy }>;
   fixtures: FixtureResult[];
 }
+
+function aggregate(results: FixtureResult[]): Accuracy {
+  const n = results.length || 1;
+  const atsMae = results.reduce((s, r) => s + r.ats.error, 0) / n;
+  const atsInBandRate = results.filter((r) => r.ats.inBand).length / n;
+  const keywordF1 = results.reduce((s, r) => s + r.keywordExtraction.f1, 0) / n;
+  const keywordPrecision = results.reduce((s, r) => s + r.keywordExtraction.precision, 0) / n;
+  const keywordRecall = results.reduce((s, r) => s + r.keywordExtraction.recall, 0) / n;
+  const groundingPassRate = results.filter((r) => r.grounding.passed).length / n;
+  const bannedPhraseRate = results.filter((r) => !r.bannedPhrases.passed).length / n;
+  const overall = Math.round(
+    100 * (
+      0.30 * atsInBandRate +
+      0.30 * keywordF1 +
+      0.25 * groundingPassRate +
+      0.15 * (1 - bannedPhraseRate)
+    )
+  );
+  const r3 = (x: number) => Math.round(x * 1000) / 1000;
+  return {
+    atsMae: Math.round(atsMae * 10) / 10,
+    atsInBandRate: r3(atsInBandRate),
+    keywordF1: r3(keywordF1),
+    keywordPrecision: r3(keywordPrecision),
+    keywordRecall: r3(keywordRecall),
+    groundingPassRate: r3(groundingPassRate),
+    bannedPhraseRate: r3(bannedPhraseRate),
+    overall,
+  };
+}
+
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
