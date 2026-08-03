@@ -160,6 +160,7 @@ serve(async (req) => {
       results.push({
         id: f.id,
         label: f.label,
+        feature: f.feature ?? "cv-scan",
         ats: { predicted: atsScore, band: f.truth.atsBand, inBand, error },
         keywordExtraction: { predicted, expected, precision, recall, f1 },
         grounding: {
@@ -177,41 +178,25 @@ serve(async (req) => {
       });
     }
 
-    // Aggregate
-    const n = results.length;
-    const atsMae = results.reduce((s, r) => s + r.ats.error, 0) / n;
-    const atsInBandRate = results.filter((r) => r.ats.inBand).length / n;
-    const keywordF1 = results.reduce((s, r) => s + r.keywordExtraction.f1, 0) / n;
-    const keywordPrecision = results.reduce((s, r) => s + r.keywordExtraction.precision, 0) / n;
-    const keywordRecall = results.reduce((s, r) => s + r.keywordExtraction.recall, 0) / n;
-    const groundingPassRate = results.filter((r) => r.grounding.passed).length / n;
-    const bannedPhraseRate = results.filter((r) => !r.bannedPhrases.passed).length / n;
-
-    // Composite: weighted average, mapped to 0-100.
-    const overall = Math.round(
-      100 * (
-        0.30 * atsInBandRate +
-        0.30 * keywordF1 +
-        0.25 * groundingPassRate +
-        0.15 * (1 - bannedPhraseRate)
-      )
-    );
+    const groups = new Map<string, FixtureResult[]>();
+    for (const r of results) {
+      const arr = groups.get(r.feature) ?? [];
+      arr.push(r);
+      groups.set(r.feature, arr);
+    }
 
     const report: EvalReport = {
       ranAt: new Date().toISOString(),
-      fixtureCount: n,
-      accuracy: {
-        atsMae: Math.round(atsMae * 10) / 10,
-        atsInBandRate,
-        keywordF1: Math.round(keywordF1 * 1000) / 1000,
-        keywordPrecision: Math.round(keywordPrecision * 1000) / 1000,
-        keywordRecall: Math.round(keywordRecall * 1000) / 1000,
-        groundingPassRate: Math.round(groundingPassRate * 1000) / 1000,
-        bannedPhraseRate: Math.round(bannedPhraseRate * 1000) / 1000,
-        overall,
-      },
+      fixtureCount: results.length,
+      accuracy: aggregate(results),
+      byFeature: [...groups.entries()].map(([feature, rs]) => ({
+        feature,
+        fixtureCount: rs.length,
+        accuracy: aggregate(rs),
+      })),
       fixtures: results,
     };
+
 
     return new Response(JSON.stringify(report), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
