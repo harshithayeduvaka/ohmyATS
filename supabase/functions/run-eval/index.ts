@@ -216,12 +216,17 @@ function extractKeywordsBaseline(jd: string): string[] {
   const tech = [
     "SQL","Python","Java","Go","Rust","Ruby","TypeScript","JavaScript","React","Node","Kubernetes",
     "Docker","AWS","GCP","Azure","BigQuery","Snowflake","Postgres","PostgreSQL","MySQL","MongoDB","Redis","Kafka",
-    "Tableau","Looker","Power BI","dbt","Airflow","Spark","Terraform","Git",
+    "Tableau","Looker","Power BI","dbt","Airflow","Spark","Terraform","Git","Excel","Anaplan","SAP","TM1","SAP BPC","IFRS",
     "Meta","Google Ads","TikTok","SEO","SEM","CRM","email","segmentation","A/B testing","attribution",
     "distributed systems","backend","frontend","full-stack","microservices",
     "brand marketing","performance marketing","team management","P&L",
-    "French","English","Spanish","German",
+    "Greenhouse","Lever","Workday","LinkedIn Recruiter","scorecard","time-to-fill","recruitment",
+    "S&OP","demand planning","forecasting","inventory","supply chain",
+    "Figma","design system","usability testing","prototyping","accessibility","WCAG",
+    "product management","discovery","experimentation","Amplitude","Mixpanel","roadmap",
+    "French","English","Spanish","German","Italian",
   ];
+
   const found = tech.filter((t) => new RegExp(`\\b${t.replace(/[+.]/g, "\\$&")}\\b`, "i").test(jd));
   return found;
 }
