@@ -5,30 +5,35 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { EVAL_FIXTURES } from "@/lib/evalFixtures";
+import { EVAL_FIXTURES, FEATURE_LABELS, type EvalFeature } from "@/lib/evalFixtures";
+
+interface Accuracy {
+  atsMae: number;
+  atsInBandRate: number;
+  keywordF1: number;
+  keywordPrecision: number;
+  keywordRecall: number;
+  groundingPassRate: number;
+  bannedPhraseRate: number;
+  overall: number;
+}
 
 interface EvalReport {
   ranAt: string;
   fixtureCount: number;
-  accuracy: {
-    atsMae: number;
-    atsInBandRate: number;
-    keywordF1: number;
-    keywordPrecision: number;
-    keywordRecall: number;
-    groundingPassRate: number;
-    bannedPhraseRate: number;
-    overall: number;
-  };
+  accuracy: Accuracy;
+  byFeature?: Array<{ feature: string; fixtureCount: number; accuracy: Accuracy }>;
   fixtures: Array<{
     id: string;
     label: string;
+    feature?: string;
     ats: { predicted: number; band: [number, number]; inBand: boolean; error: number };
     keywordExtraction: { predicted: string[]; expected: string[]; precision: number; recall: number; f1: number };
     grounding: { passed: boolean; issues: string[] };
     bannedPhrases: { passed: boolean; hits: string[] };
   }>;
 }
+
 
 const Eval = () => {
   const { user, loading: authLoading } = useAuth();
@@ -106,6 +111,44 @@ const Eval = () => {
               <Metric label="Keyword F1" value={report.accuracy.keywordF1.toFixed(2)} sub={`P ${report.accuracy.keywordPrecision.toFixed(2)} · R ${report.accuracy.keywordRecall.toFixed(2)}`} />
               <Metric label="Grounding pass" value={`${(report.accuracy.groundingPassRate * 100).toFixed(0)}%`} sub={`Banned: ${(report.accuracy.bannedPhraseRate * 100).toFixed(0)}%`} />
             </div>
+
+            {report.byFeature && report.byFeature.length > 0 && (
+              <Card className="p-4 mb-4 overflow-x-auto">
+                <h2 className="text-sm font-semibold mb-3">Per-feature accuracy</h2>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-xs text-muted-foreground uppercase tracking-wide text-left">
+                      <th className="py-1 pr-3 font-medium">Feature</th>
+                      <th className="py-1 pr-3 font-medium">Fixtures</th>
+                      <th className="py-1 pr-3 font-medium">Overall</th>
+                      <th className="py-1 pr-3 font-medium">ATS in-band</th>
+                      <th className="py-1 pr-3 font-medium">KW F1</th>
+                      <th className="py-1 pr-3 font-medium">Grounding</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {report.byFeature
+                      .slice()
+                      .sort((a, b) => a.accuracy.overall - b.accuracy.overall)
+                      .map((row) => (
+                        <tr key={row.feature} className="border-t border-border">
+                          <td className="py-2 pr-3 font-medium">
+                            {FEATURE_LABELS[row.feature as EvalFeature] ?? row.feature}
+                          </td>
+                          <td className="py-2 pr-3 text-muted-foreground">{row.fixtureCount}</td>
+                          <td className={`py-2 pr-3 font-mono-tech font-semibold ${row.accuracy.overall >= 93 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
+                            {row.accuracy.overall}
+                          </td>
+                          <td className="py-2 pr-3 font-mono-tech">{(row.accuracy.atsInBandRate * 100).toFixed(0)}%</td>
+                          <td className="py-2 pr-3 font-mono-tech">{row.accuracy.keywordF1.toFixed(2)}</td>
+                          <td className="py-2 pr-3 font-mono-tech">{(row.accuracy.groundingPassRate * 100).toFixed(0)}%</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </Card>
+            )}
+
 
             <Card className="p-4 mb-4">
               <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">

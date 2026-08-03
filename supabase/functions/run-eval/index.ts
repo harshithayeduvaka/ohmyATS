@@ -14,6 +14,7 @@ const corsHeaders = {
 interface Fixture {
   id: string;
   label: string;
+  feature?: string;
   cv: string;
   jd: string;
   truth: {
@@ -29,6 +30,7 @@ interface Fixture {
 interface FixtureResult {
   id: string;
   label: string;
+  feature: string;
   ats: {
     predicted: number;
     band: [number, number];
@@ -53,21 +55,55 @@ interface FixtureResult {
   };
 }
 
+interface Accuracy {
+  atsMae: number;              // mean absolute error from band
+  atsInBandRate: number;       // 0..1
+  keywordF1: number;           // macro-avg F1
+  keywordPrecision: number;
+  keywordRecall: number;
+  groundingPassRate: number;
+  bannedPhraseRate: number;    // proportion of fixtures with ≥1 banned phrase
+  overall: number;             // 0..100 composite
+}
+
 interface EvalReport {
   ranAt: string;
   fixtureCount: number;
-  accuracy: {
-    atsMae: number;              // mean absolute error from band
-    atsInBandRate: number;       // 0..1
-    keywordF1: number;           // macro-avg F1
-    keywordPrecision: number;
-    keywordRecall: number;
-    groundingPassRate: number;
-    bannedPhraseRate: number;    // proportion of fixtures with ≥1 banned phrase
-    overall: number;             // 0..100 composite
-  };
+  accuracy: Accuracy;
+  byFeature: Array<{ feature: string; fixtureCount: number; accuracy: Accuracy }>;
   fixtures: FixtureResult[];
 }
+
+function aggregate(results: FixtureResult[]): Accuracy {
+  const n = results.length || 1;
+  const atsMae = results.reduce((s, r) => s + r.ats.error, 0) / n;
+  const atsInBandRate = results.filter((r) => r.ats.inBand).length / n;
+  const keywordF1 = results.reduce((s, r) => s + r.keywordExtraction.f1, 0) / n;
+  const keywordPrecision = results.reduce((s, r) => s + r.keywordExtraction.precision, 0) / n;
+  const keywordRecall = results.reduce((s, r) => s + r.keywordExtraction.recall, 0) / n;
+  const groundingPassRate = results.filter((r) => r.grounding.passed).length / n;
+  const bannedPhraseRate = results.filter((r) => !r.bannedPhrases.passed).length / n;
+  const overall = Math.round(
+    100 * (
+      0.30 * atsInBandRate +
+      0.30 * keywordF1 +
+      0.25 * groundingPassRate +
+      0.15 * (1 - bannedPhraseRate)
+    )
+  );
+  const r3 = (x: number) => Math.round(x * 1000) / 1000;
+  return {
+    atsMae: Math.round(atsMae * 10) / 10,
+    atsInBandRate: r3(atsInBandRate),
+    keywordF1: r3(keywordF1),
+    keywordPrecision: r3(keywordPrecision),
+    keywordRecall: r3(keywordRecall),
+    groundingPassRate: r3(groundingPassRate),
+    bannedPhraseRate: r3(bannedPhraseRate),
+    overall,
+  };
+}
+
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -124,6 +160,7 @@ serve(async (req) => {
       results.push({
         id: f.id,
         label: f.label,
+        feature: f.feature ?? "cv-scan",
         ats: { predicted: atsScore, band: f.truth.atsBand, inBand, error },
         keywordExtraction: { predicted, expected, precision, recall, f1 },
         grounding: {
@@ -141,41 +178,25 @@ serve(async (req) => {
       });
     }
 
-    // Aggregate
-    const n = results.length;
-    const atsMae = results.reduce((s, r) => s + r.ats.error, 0) / n;
-    const atsInBandRate = results.filter((r) => r.ats.inBand).length / n;
-    const keywordF1 = results.reduce((s, r) => s + r.keywordExtraction.f1, 0) / n;
-    const keywordPrecision = results.reduce((s, r) => s + r.keywordExtraction.precision, 0) / n;
-    const keywordRecall = results.reduce((s, r) => s + r.keywordExtraction.recall, 0) / n;
-    const groundingPassRate = results.filter((r) => r.grounding.passed).length / n;
-    const bannedPhraseRate = results.filter((r) => !r.bannedPhrases.passed).length / n;
-
-    // Composite: weighted average, mapped to 0-100.
-    const overall = Math.round(
-      100 * (
-        0.30 * atsInBandRate +
-        0.30 * keywordF1 +
-        0.25 * groundingPassRate +
-        0.15 * (1 - bannedPhraseRate)
-      )
-    );
+    const groups = new Map<string, FixtureResult[]>();
+    for (const r of results) {
+      const arr = groups.get(r.feature) ?? [];
+      arr.push(r);
+      groups.set(r.feature, arr);
+    }
 
     const report: EvalReport = {
       ranAt: new Date().toISOString(),
-      fixtureCount: n,
-      accuracy: {
-        atsMae: Math.round(atsMae * 10) / 10,
-        atsInBandRate,
-        keywordF1: Math.round(keywordF1 * 1000) / 1000,
-        keywordPrecision: Math.round(keywordPrecision * 1000) / 1000,
-        keywordRecall: Math.round(keywordRecall * 1000) / 1000,
-        groundingPassRate: Math.round(groundingPassRate * 1000) / 1000,
-        bannedPhraseRate: Math.round(bannedPhraseRate * 1000) / 1000,
-        overall,
-      },
+      fixtureCount: results.length,
+      accuracy: aggregate(results),
+      byFeature: [...groups.entries()].map(([feature, rs]) => ({
+        feature,
+        fixtureCount: rs.length,
+        accuracy: aggregate(rs),
+      })),
       fixtures: results,
     };
+
 
     return new Response(JSON.stringify(report), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -195,12 +216,17 @@ function extractKeywordsBaseline(jd: string): string[] {
   const tech = [
     "SQL","Python","Java","Go","Rust","Ruby","TypeScript","JavaScript","React","Node","Kubernetes",
     "Docker","AWS","GCP","Azure","BigQuery","Snowflake","Postgres","PostgreSQL","MySQL","MongoDB","Redis","Kafka",
-    "Tableau","Looker","Power BI","dbt","Airflow","Spark","Terraform","Git",
+    "Tableau","Looker","Power BI","dbt","Airflow","Spark","Terraform","Git","Excel","Anaplan","SAP","TM1","SAP BPC","IFRS",
     "Meta","Google Ads","TikTok","SEO","SEM","CRM","email","segmentation","A/B testing","attribution",
     "distributed systems","backend","frontend","full-stack","microservices",
     "brand marketing","performance marketing","team management","P&L",
-    "French","English","Spanish","German",
+    "Greenhouse","Lever","Workday","LinkedIn Recruiter","scorecard","time-to-fill","recruitment",
+    "S&OP","demand planning","forecasting","inventory","supply chain",
+    "Figma","design system","usability testing","prototyping","accessibility","WCAG",
+    "product management","discovery","experimentation","Amplitude","Mixpanel","roadmap",
+    "French","English","Spanish","German","Italian",
   ];
+
   const found = tech.filter((t) => new RegExp(`\\b${t.replace(/[+.]/g, "\\$&")}\\b`, "i").test(jd));
   return found;
 }
