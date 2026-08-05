@@ -15,6 +15,8 @@ const ElevatorPitch = () => {
   const [duration, setDuration] = useState<"30s" | "60s" | "90s">("60s");
   const [loading, setLoading] = useState(false);
   const [pitch, setPitch] = useState("");
+  const [timing, setTiming] = useState<{ wordCount: number; estimatedSeconds: number; targetSeconds: number } | null>(null);
+
   const [copied, setCopied] = useState(false);
 
   const generate = async () => {
@@ -27,6 +29,12 @@ const ElevatorPitch = () => {
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
       setPitch(data.pitch);
+      setTiming(
+        typeof data.estimatedSeconds === "number"
+          ? { wordCount: data.wordCount, estimatedSeconds: data.estimatedSeconds, targetSeconds: data.targetSeconds }
+          : null
+      );
+
     } catch (err: any) {
       toast({ title: "Failed", description: err.message, variant: "destructive" });
     } finally {
@@ -79,6 +87,12 @@ const ElevatorPitch = () => {
                 <div className="p-5 rounded-lg border border-border bg-card">
                   <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{pitch}</p>
                 </div>
+                {timing && (
+                  <p className="text-xs text-muted-foreground">
+                    {timing.wordCount} words · ~{timing.estimatedSeconds}s spoken at a natural pace (target {timing.targetSeconds}s)
+                  </p>
+                )}
+
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">

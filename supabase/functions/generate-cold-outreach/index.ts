@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { runThreePass, tryParseJson } from "../_shared/ai-pipeline.ts";
 import { checkBannedPhrases, checkGrounding, checkWordCount, combineValidators } from "../_shared/validators.ts";
+import { checkNumbersGrounded, checkEntitiesGrounded } from "../_shared/profile-anchors.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -140,9 +141,9 @@ Return ONLY valid JSON:
   "pillarsCovered": { "fit": "one-line fit summary", "value": "one-line value summary", "whyGreat": "one-line why-now summary" }
 }${langInstruction}`;
 
-    const userPrompt = `Recipient: ${recipientName}\nRole: ${recipientRole || "Hiring Manager"}\nCompany: ${companyName}\nChannel: ${channelType}\nTone: ${toneType}\nOutput Language: ${lang}${cv ? `\n\nMy CV:\n${cv}` : ""}${jd ? `\n\nJob Description:\n${jd}` : ""}${companyResearch ? `\n\nCompany Research (use to personalize the WHERE-I-FIT and WHY-GREAT-FIT pillars):\n${companyResearch}` : ""}`;
+    const userPrompt = `Recipient: ${recipientName}\nRole: ${recipientRole || "Hiring Manager"}\nCompany: ${companyName}\nChannel: ${channelType}\nTone: ${toneType}\nOutput Language: ${lang}${cv ? `\n\nMy CV:\n${cv}` : ""}${jd ? `\n\nJob Description:\n${jd}` : ""}${companyResearch ? `\n\nVERIFIED COMPANY FACTS — the hook MUST quote or paraphrase one of these, and you may state no other company fact:\n${companyResearch}` : ""}`;
 
-    const source = `${cv || ""}\n${jd || ""}\n${companyName}\n${companyResearch}`;
+    const source = `${cv || ""}\n${jd || ""}\n${companyName}\n${recipientName}\n${recipientRole || ""}\n${companyResearch}`;
     const maxWords = channelType === "linkedin" ? 80 : 90;
 
     type OutreachOut = {
@@ -160,11 +161,31 @@ Return ONLY valid JSON:
         parse: (raw) => tryParseJson<OutreachOut>(raw),
         validate: (out) => {
           const body = out.message ?? "";
-          return combineValidators([
+          const hooks = (out.personalizationHooks ?? []).join(" ");
+          const checks = [
             checkBannedPhrases(body),
             checkWordCount(body, 25, maxWords + 15),
             checkGrounding(body, source, 0.28),
-          ]);
+            checkNumbersGrounded(`${body}\n${hooks}`, source),
+            checkEntitiesGrounded(`${body}\n${hooks}`, source),
+          ];
+          if (companyResearch) {
+            // With research available, the opener must cite something company-specific.
+            const researchTokens = companyResearch
+              .toLowerCase()
+              .replace(/[^\p{L}\p{N}\s-]/gu, " ")
+              .split(/\s+/)
+              .filter((t) => t.length > 5);
+            const bodyLower = `${body} ${hooks}`.toLowerCase();
+            const overlap = researchTokens.filter((t) => bodyLower.includes(t)).length;
+            if (overlap < 2) {
+              checks.push({ ok: false, issues: ["Company research was supplied but the message cites none of it — the opener must reference a specific, verifiable fact about the company."] });
+            }
+          } else {
+            const genericOpener = /^(hi|hello|hey)[^.!?]*[.!?]\s*(i|my|as a)\b/i.test(body.trim());
+            if (genericOpener) checks.push({ ok: false, issues: ["Opener is about the sender — lead with something specific to the recipient or the role."] });
+          }
+          return combineValidators(checks);
         },
         draftModel: "flash",
         refineModel: "pro",

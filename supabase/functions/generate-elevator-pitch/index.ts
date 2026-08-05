@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { runThreePass, tryParseJson } from "../_shared/ai-pipeline.ts";
 import { checkBannedPhrases, checkGrounding, checkWordCount, combineValidators } from "../_shared/validators.ts";
+import { checkNumbersGrounded, checkEntitiesGrounded } from "../_shared/profile-anchors.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -58,13 +59,21 @@ Respond with ONLY valid JSON: { "pitch": string }`,
           checkWordCount(o.pitch, minW, maxW),
           checkBannedPhrases(o.pitch),
           checkGrounding(o.pitch, `${cv}\n${role ?? ""}`, 0.25),
+          checkNumbersGrounded(o.pitch, `${cv}\n${role ?? ""}`),
+          checkEntitiesGrounded(o.pitch, `${cv}\n${role ?? ""}`),
         ]);
       },
       jsonMode: true,
       temperature: 0.6,
     });
 
-    return new Response(JSON.stringify(output), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // Deterministic speech-rate check (140 wpm conversational delivery).
+    const words = (output.pitch ?? "").trim().split(/\s+/).filter(Boolean).length;
+    const estimatedSeconds = Math.round((words / 140) * 60);
+    return new Response(
+      JSON.stringify({ ...output, wordCount: words, estimatedSeconds, targetSeconds }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (e) {
     console.error("elevator-pitch error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
