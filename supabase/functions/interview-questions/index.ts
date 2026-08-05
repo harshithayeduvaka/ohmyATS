@@ -89,7 +89,7 @@ ${cv ? "Also provide suggested answers based STRICTLY on the candidate's CV. Do 
 
 CRITICAL: Every suggested answer MUST be directly traceable to specific content in the candidate's CV. Never invent metrics, projects, company names, or experiences.
 
-For EACH question, also produce a "rubric": 3-5 concrete criteria a strong answer must satisfy (e.g. "Uses STAR structure", "Cites a quantified outcome", "Names a specific stakeholder"). The rubric will be used to score candidate answers deterministically.
+For EACH question, also produce a "rubric": 3-5 concrete criteria a strong answer must satisfy (e.g. "Uses STAR structure", "Cites a quantified outcome", "Names a specific stakeholder"). The rubric will be used to score candidate answers deterministically. Each criterion must be observable and checkable in 3+ words — never vague filler like "be confident" or "good answer".${cvEvidenceBlock}
 
 Respond with ONLY valid JSON:
 {
