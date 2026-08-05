@@ -143,7 +143,7 @@ Return ONLY valid JSON:
 
     const userPrompt = `Recipient: ${recipientName}\nRole: ${recipientRole || "Hiring Manager"}\nCompany: ${companyName}\nChannel: ${channelType}\nTone: ${toneType}\nOutput Language: ${lang}${cv ? `\n\nMy CV:\n${cv}` : ""}${jd ? `\n\nJob Description:\n${jd}` : ""}${companyResearch ? `\n\nVERIFIED COMPANY FACTS — the hook MUST quote or paraphrase one of these, and you may state no other company fact:\n${companyResearch}` : ""}`;
 
-    const source = `${cv || ""}\n${jd || ""}\n${companyName}\n${companyResearch}`;
+    const source = `${cv || ""}\n${jd || ""}\n${companyName}\n${recipientName}\n${recipientRole || ""}\n${companyResearch}`;
     const maxWords = channelType === "linkedin" ? 80 : 90;
 
     type OutreachOut = {
