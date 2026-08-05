@@ -80,7 +80,17 @@ serve(async (req) => {
 - For any other type, adapt the tone and question style to match what "${interviewType}" implies.`
       : "";
 
+    const evidence = cv ? extractCvEvidence(cv) : null;
+    const cvEvidenceBlock = evidence
+      ? `\n\nCV EVIDENCE INDEX (the ONLY facts you may cite in suggested answers):
+- Employers/roles detected: ${evidence.employers.slice(0, 12).join(" | ") || "none detected"}
+- Metrics available: ${evidence.metrics.slice(0, 20).join(", ") || "none — do NOT invent any numbers"}
+- Achievement bullets: ${evidence.bullets.slice(0, 12).map((b, i) => `[${i + 1}] ${b.slice(0, 160)}`).join("\n")}
+Every suggested answer must reuse one or more of these bullets/metrics verbatim or near-verbatim. Any number or company name not listed above is a fabrication and will be rejected.`
+      : "";
+
     const systemPrompt = `You are a senior hiring manager. Generate realistic interview questions for this role.
+
 Include a mix of questions appropriate for the interview context.
 ${companyName ? `The company is "${companyName}". Tailor questions to reflect what this specific company values and how they typically interview.` : ""}
 ${companySector ? `The industry/sector is "${companySector}". Include sector-specific questions that test domain knowledge and industry awareness.` : ""}
