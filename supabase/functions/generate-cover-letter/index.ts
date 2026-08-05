@@ -148,8 +148,11 @@ serve(async (req) => {
             checkWordCount(body, 200, 320),
             checkGrounding(body, source, 0.22),
             checkCompanyMentions(body, companyName, companyName ? 1 : 0),
+            checkNumbersGrounded(body, source),
+            checkEntitiesGrounded(body, source),
           ]);
         },
+
         draftModel: "flash",
         refineModel: "pro",
         temperature: 0.6,
