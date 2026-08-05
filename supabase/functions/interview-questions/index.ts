@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { runThreePass, tryParseJson } from "../_shared/ai-pipeline.ts";
 import { checkGrounding, combineValidators, type ValidatorResult } from "../_shared/validators.ts";
+import { extractCvEvidence, validateRubrics, checkNumbersGrounded, checkEntitiesGrounded } from "../_shared/profile-anchors.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
