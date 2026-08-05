@@ -7,6 +7,8 @@ import {
   checkCompanyMentions,
   combineValidators,
 } from "../_shared/validators.ts";
+import { checkNumbersGrounded, checkEntitiesGrounded } from "../_shared/profile-anchors.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
