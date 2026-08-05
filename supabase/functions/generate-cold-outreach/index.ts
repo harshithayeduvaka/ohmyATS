@@ -141,7 +141,7 @@ Return ONLY valid JSON:
   "pillarsCovered": { "fit": "one-line fit summary", "value": "one-line value summary", "whyGreat": "one-line why-now summary" }
 }${langInstruction}`;
 
-    const userPrompt = `Recipient: ${recipientName}\nRole: ${recipientRole || "Hiring Manager"}\nCompany: ${companyName}\nChannel: ${channelType}\nTone: ${toneType}\nOutput Language: ${lang}${cv ? `\n\nMy CV:\n${cv}` : ""}${jd ? `\n\nJob Description:\n${jd}` : ""}${companyResearch ? `\n\nVERIFIED COMPANY FACTS — the hook MUST quote or paraphrase one of these. Do not state any other company fact:\n${companyResearch}\n\n(also usable to personalize the WHERE-I-FIT and WHY-GREAT-FIT pillars):\n${companyResearch}` : ""}`;
+    const userPrompt = `Recipient: ${recipientName}\nRole: ${recipientRole || "Hiring Manager"}\nCompany: ${companyName}\nChannel: ${channelType}\nTone: ${toneType}\nOutput Language: ${lang}${cv ? `\n\nMy CV:\n${cv}` : ""}${jd ? `\n\nJob Description:\n${jd}` : ""}${companyResearch ? `\n\nVERIFIED COMPANY FACTS — the hook MUST quote or paraphrase one of these, and you may state no other company fact:\n${companyResearch}` : ""}`;
 
     const source = `${cv || ""}\n${jd || ""}\n${companyName}\n${companyResearch}`;
     const maxWords = channelType === "linkedin" ? 80 : 90;
