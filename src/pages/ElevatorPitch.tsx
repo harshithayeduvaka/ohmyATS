@@ -29,6 +29,12 @@ const ElevatorPitch = () => {
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
       setPitch(data.pitch);
+      setTiming(
+        typeof data.estimatedSeconds === "number"
+          ? { wordCount: data.wordCount, estimatedSeconds: data.estimatedSeconds, targetSeconds: data.targetSeconds }
+          : null
+      );
+
     } catch (err: any) {
       toast({ title: "Failed", description: err.message, variant: "destructive" });
     } finally {
