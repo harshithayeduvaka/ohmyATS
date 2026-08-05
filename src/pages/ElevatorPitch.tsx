@@ -15,6 +15,8 @@ const ElevatorPitch = () => {
   const [duration, setDuration] = useState<"30s" | "60s" | "90s">("60s");
   const [loading, setLoading] = useState(false);
   const [pitch, setPitch] = useState("");
+  const [timing, setTiming] = useState<{ wordCount: number; estimatedSeconds: number; targetSeconds: number } | null>(null);
+
   const [copied, setCopied] = useState(false);
 
   const generate = async () => {
