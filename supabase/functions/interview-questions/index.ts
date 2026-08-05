@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { runThreePass, tryParseJson } from "../_shared/ai-pipeline.ts";
 import { checkGrounding, combineValidators, type ValidatorResult } from "../_shared/validators.ts";
+import { extractCvEvidence, validateRubrics, checkNumbersGrounded, checkEntitiesGrounded } from "../_shared/profile-anchors.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -78,7 +80,17 @@ serve(async (req) => {
 - For any other type, adapt the tone and question style to match what "${interviewType}" implies.`
       : "";
 
+    const evidence = cv ? extractCvEvidence(cv) : null;
+    const cvEvidenceBlock = evidence
+      ? `\n\nCV EVIDENCE INDEX (the ONLY facts you may cite in suggested answers):
+- Employers/roles detected: ${evidence.employers.slice(0, 12).join(" | ") || "none detected"}
+- Metrics available: ${evidence.metrics.slice(0, 20).join(", ") || "none — do NOT invent any numbers"}
+- Achievement bullets: ${evidence.bullets.slice(0, 12).map((b, i) => `[${i + 1}] ${b.slice(0, 160)}`).join("\n")}
+Every suggested answer must reuse one or more of these bullets/metrics verbatim or near-verbatim. Any number or company name not listed above is a fabrication and will be rejected.`
+      : "";
+
     const systemPrompt = `You are a senior hiring manager. Generate realistic interview questions for this role.
+
 Include a mix of questions appropriate for the interview context.
 ${companyName ? `The company is "${companyName}". Tailor questions to reflect what this specific company values and how they typically interview.` : ""}
 ${companySector ? `The industry/sector is "${companySector}". Include sector-specific questions that test domain knowledge and industry awareness.` : ""}
@@ -87,7 +99,7 @@ ${cv ? "Also provide suggested answers based STRICTLY on the candidate's CV. Do 
 
 CRITICAL: Every suggested answer MUST be directly traceable to specific content in the candidate's CV. Never invent metrics, projects, company names, or experiences.
 
-For EACH question, also produce a "rubric": 3-5 concrete criteria a strong answer must satisfy (e.g. "Uses STAR structure", "Cites a quantified outcome", "Names a specific stakeholder"). The rubric will be used to score candidate answers deterministically.
+For EACH question, also produce a "rubric": 3-5 concrete criteria a strong answer must satisfy (e.g. "Uses STAR structure", "Cites a quantified outcome", "Names a specific stakeholder"). The rubric will be used to score candidate answers deterministically. Each criterion must be observable and checkable in 3+ words — never vague filler like "be confident" or "good answer".${cvEvidenceBlock}
 
 Respond with ONLY valid JSON:
 {
@@ -126,18 +138,18 @@ Generate 8-10 questions ordered from warm-up to tough.${langInstruction}`;
         if (out.questions.length < 6) {
           results.push({ ok: false, issues: [`Only ${out.questions.length} questions (need 6+)`] });
         }
-        const missingRubric = out.questions.filter((q) => !Array.isArray(q.rubric) || (q.rubric?.length ?? 0) < 3);
-        if (missingRubric.length > 0) {
-          results.push({ ok: false, issues: [`${missingRubric.length} questions missing 3+ rubric criteria`] });
-        }
+        results.push(validateRubrics(out.questions, 3));
         if (cv) {
           const answersText = out.questions
             .map((q) => q.suggestedAnswer ?? "")
             .join("\n");
           if (answersText.trim().length > 0) {
             results.push(checkGrounding(answersText, source, 0.3));
+            results.push(checkNumbersGrounded(answersText, source));
+            results.push(checkEntitiesGrounded(answersText, source));
           }
         }
+
         return combineValidators(results);
       },
       draftModel: "flash",
