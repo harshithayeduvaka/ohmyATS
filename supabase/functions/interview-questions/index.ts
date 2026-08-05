@@ -138,18 +138,18 @@ Generate 8-10 questions ordered from warm-up to tough.${langInstruction}`;
         if (out.questions.length < 6) {
           results.push({ ok: false, issues: [`Only ${out.questions.length} questions (need 6+)`] });
         }
-        const missingRubric = out.questions.filter((q) => !Array.isArray(q.rubric) || (q.rubric?.length ?? 0) < 3);
-        if (missingRubric.length > 0) {
-          results.push({ ok: false, issues: [`${missingRubric.length} questions missing 3+ rubric criteria`] });
-        }
+        results.push(validateRubrics(out.questions, 3));
         if (cv) {
           const answersText = out.questions
             .map((q) => q.suggestedAnswer ?? "")
             .join("\n");
           if (answersText.trim().length > 0) {
             results.push(checkGrounding(answersText, source, 0.3));
+            results.push(checkNumbersGrounded(answersText, source));
+            results.push(checkEntitiesGrounded(answersText, source));
           }
         }
+
         return combineValidators(results);
       },
       draftModel: "flash",
