@@ -87,6 +87,12 @@ const ElevatorPitch = () => {
                 <div className="p-5 rounded-lg border border-border bg-card">
                   <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{pitch}</p>
                 </div>
+                {timing && (
+                  <p className="text-xs text-muted-foreground">
+                    {timing.wordCount} words · ~{timing.estimatedSeconds}s spoken at a natural pace (target {timing.targetSeconds}s)
+                  </p>
+                )}
+
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">
