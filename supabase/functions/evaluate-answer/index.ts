@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { runEnsemble, mean } from "../_shared/ensemble.ts";
-import { tryParseJson } from "../_shared/ai-pipeline.ts";
+import { scoreAnswerEnsemble } from "../_shared/interview-scoring.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,16 +7,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-interface EvalOut {
-  score: number;
-  verdict: string;
-  strengths: string[];
-  weaknesses: string[];
-  idealAnswer: string;
-  tips: string[];
-  rubricHits?: string[];
-  rubricMisses?: string[];
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
