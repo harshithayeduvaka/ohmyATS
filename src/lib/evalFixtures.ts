@@ -32,6 +32,10 @@ export interface EvalFixture {
   feature: EvalFeature;
   cv: string;
   jd: string;
+  // Interview features: a labelled answer used by the 3-model ensemble scorer.
+  interviewQuestion?: string;
+  interviewAnswer?: string;
+  interviewRubric?: string[];
   truth: {
     atsBand: [number, number];              // acceptable score range (min, max)
     mustHaveKeywords: string[];             // MUST be extracted from the JD
@@ -39,6 +43,7 @@ export interface EvalFixture {
     companyName?: string;
     roleName?: string;
     roleFitVerdict?: "strong" | "moderate" | "weak";
+    answerScoreBand?: [number, number];     // expected ensemble score for interviewAnswer
   };
 }
 
@@ -656,8 +661,17 @@ export const EVAL_FIXTURES: EvalFixture[] = [
     feature: "interview-qa",
     cv: CV_DATA_ANALYST,
     jd: JD_DATA_ANALYST_SENIOR,
+    interviewQuestion: "Tell me about a time your analysis changed a business decision.",
+    interviewAnswer: "At Acme Retail I A/B tested our checkout flow after spotting a 30% drop-off in the funnel. I ran the test over four weeks on 200k sessions, and the winning variant lifted conversion 8%, worth about EUR 480k of incremental revenue. I presented it to the growth lead and we shipped it to all six markets.",
+    interviewRubric: [
+      "Uses STAR structure with a clear situation and result",
+      "Cites a quantified outcome",
+      "Names the specific stakeholder or decision changed",
+      "Explains the analytical method used",
+    ],
     truth: {
       atsBand: [70, 88],
+      answerScoreBand: [7, 9] as [number, number],
       mustHaveKeywords: ["A/B testing", "attribution", "SQL"],
       forbiddenClaims: ["as a passionate", "team player"],
       companyName: "Doctolib",
@@ -669,8 +683,17 @@ export const EVAL_FIXTURES: EvalFixture[] = [
     feature: "interview-qa",
     cv: CV_SWE,
     jd: JD_SWE,
+    interviewQuestion: "Describe a production incident you owned end to end.",
+    interviewAnswer: "We had a bad day. Some services were slow so I looked into it and fixed a few things, then it got better. I usually just check the dashboards and restart what looks broken.",
+    interviewRubric: [
+      "Describes detection and impact concretely",
+      "Explains root cause analysis",
+      "States a quantified recovery or prevention outcome",
+      "Shows ownership of follow-up actions",
+    ],
     truth: {
       atsBand: [72, 92],
+      answerScoreBand: [1, 4] as [number, number],
       mustHaveKeywords: ["distributed systems", "Kubernetes", "Go"],
       forbiddenClaims: ["passionate"],
       companyName: "Alan",
@@ -682,8 +705,16 @@ export const EVAL_FIXTURES: EvalFixture[] = [
     feature: "interview-qa",
     cv: CV_FINANCE,
     jd: JD_FINANCE,
+    interviewQuestion: "How do you improve forecast accuracy?",
+    interviewAnswer: "I rebuilt the rolling forecast in Anaplan with driver-based assumptions, aligned with IFRS reporting, and ran monthly variance reviews with each cost centre owner. Forecast error dropped from 12% to 5% over two quarters.",
+    interviewRubric: [
+      "Names a specific process or tool",
+      "Cites a quantified accuracy improvement",
+      "Mentions stakeholder review cadence",
+    ],
     truth: {
       atsBand: [62, 85],
+      answerScoreBand: [7, 10] as [number, number],
       mustHaveKeywords: ["forecast", "IFRS", "Anaplan"],
       forbiddenClaims: ["passionate"],
       companyName: "Sanofi",
@@ -697,8 +728,16 @@ export const EVAL_FIXTURES: EvalFixture[] = [
     feature: "interview-sim",
     cv: CV_PM,
     jd: JD_PM,
+    interviewQuestion: "Walk me through a product bet that failed.",
+    interviewAnswer: "We launched a feature we thought users wanted. It did not do very well so we removed it later. Looking back we probably should have talked to more users first.",
+    interviewRubric: [
+      "States the hypothesis and how it was tested",
+      "Cites a quantified result or metric",
+      "Draws a specific, applied lesson",
+    ],
     truth: {
       atsBand: [68, 90],
+      answerScoreBand: [2, 5] as [number, number],
       mustHaveKeywords: ["discovery", "experimentation"],
       forbiddenClaims: ["passionate", "synergy"],
       companyName: "Alan",
@@ -710,8 +749,16 @@ export const EVAL_FIXTURES: EvalFixture[] = [
     feature: "interview-sim",
     cv: CV_DESIGNER,
     jd: JD_DESIGNER,
+    interviewQuestion: "How do you validate a design before build?",
+    interviewAnswer: "I run moderated usability testing with five to eight users on a clickable prototype, tracking task success and time on task. On the onboarding redesign that surfaced two blocking issues; after fixing them, task completion went from 62% to 89%, and I folded the patterns back into our design system.",
+    interviewRubric: [
+      "Names a concrete validation method",
+      "Cites a quantified before/after metric",
+      "Connects the outcome to a system or process",
+    ],
     truth: {
       atsBand: [68, 90],
+      answerScoreBand: [7, 10] as [number, number],
       mustHaveKeywords: ["usability testing", "design system"],
       forbiddenClaims: ["passionate"],
       companyName: "Payfit",
@@ -723,8 +770,16 @@ export const EVAL_FIXTURES: EvalFixture[] = [
     feature: "interview-sim",
     cv: CV_HR,
     jd: JD_HR,
+    interviewQuestion: "How did you reduce time-to-fill on a hard req?",
+    interviewAnswer: "I worked closely with the hiring manager and sourced more candidates until we filled it. We used Greenhouse for tracking. It went faster than before I think.",
+    interviewRubric: [
+      "Describes the sourcing strategy specifically",
+      "Cites a quantified time-to-fill change",
+      "Explains the hiring-manager alignment mechanism",
+    ],
     truth: {
       atsBand: [70, 90],
+      answerScoreBand: [2, 5] as [number, number],
       mustHaveKeywords: ["Greenhouse", "time-to-fill"],
       forbiddenClaims: ["people person"],
       companyName: "BlaBlaCar",
