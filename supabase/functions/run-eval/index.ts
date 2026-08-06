@@ -4,6 +4,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { parseCV, deterministicAtsScore } from "../_shared/ats-parser.ts";
 import { checkBannedPhrases, checkGrounding, checkKeywordCoverage } from "../_shared/validators.ts";
+import { scoreAnswerEnsemble, type EnsembleMeta } from "../_shared/interview-scoring.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,6 +18,9 @@ interface Fixture {
   feature?: string;
   cv: string;
   jd: string;
+  interviewQuestion?: string;
+  interviewAnswer?: string;
+  interviewRubric?: string[];
   truth: {
     atsBand: [number, number];
     mustHaveKeywords: string[];
@@ -24,6 +28,7 @@ interface Fixture {
     companyName?: string;
     roleName?: string;
     roleFitVerdict?: "strong" | "moderate" | "weak";
+    answerScoreBand?: [number, number];
   };
 }
 
@@ -53,6 +58,11 @@ interface FixtureResult {
     passed: boolean;
     hits: string[];
   };
+  ensemble?: {
+    meta: EnsembleMeta;
+    band: [number, number];
+    inBand: boolean;
+  };
 }
 
 interface Accuracy {
@@ -63,6 +73,9 @@ interface Accuracy {
   keywordRecall: number;
   groundingPassRate: number;
   bannedPhraseRate: number;    // proportion of fixtures with ≥1 banned phrase
+  ensembleCount: number;       // fixtures scored by the 3-model ensemble
+  ensembleInBandRate: number;  // 0..1 — median score inside the labelled band
+  ensembleConsistency: number; // 0..1 — members agree within tolerance
   overall: number;             // 0..100 composite
 }
 
@@ -83,13 +96,20 @@ function aggregate(results: FixtureResult[]): Accuracy {
   const keywordRecall = results.reduce((s, r) => s + r.keywordExtraction.recall, 0) / n;
   const groundingPassRate = results.filter((r) => r.grounding.passed).length / n;
   const bannedPhraseRate = results.filter((r) => !r.bannedPhrases.passed).length / n;
+  const ens = results.filter((r) => r.ensemble);
+  const ensembleCount = ens.length;
+  const ensembleInBandRate = ensembleCount === 0 ? 0 : ens.filter((r) => r.ensemble!.inBand).length / ensembleCount;
+  const ensembleConsistency = ensembleCount === 0 ? 0 : ens.filter((r) => r.ensemble!.meta.consistent).length / ensembleCount;
+  const base =
+    0.30 * atsInBandRate +
+    0.30 * keywordF1 +
+    0.25 * groundingPassRate +
+    0.15 * (1 - bannedPhraseRate);
+  // When the 3-model ensemble ran for this group, give it 25% of the composite.
   const overall = Math.round(
-    100 * (
-      0.30 * atsInBandRate +
-      0.30 * keywordF1 +
-      0.25 * groundingPassRate +
-      0.15 * (1 - bannedPhraseRate)
-    )
+    100 * (ensembleCount === 0
+      ? base
+      : 0.75 * base + 0.25 * (0.6 * ensembleInBandRate + 0.4 * ensembleConsistency))
   );
   const r3 = (x: number) => Math.round(x * 1000) / 1000;
   return {
@@ -100,6 +120,9 @@ function aggregate(results: FixtureResult[]): Accuracy {
     keywordRecall: r3(keywordRecall),
     groundingPassRate: r3(groundingPassRate),
     bannedPhraseRate: r3(bannedPhraseRate),
+    ensembleCount,
+    ensembleInBandRate: r3(ensembleInBandRate),
+    ensembleConsistency: r3(ensembleConsistency),
     overall,
   };
 }
@@ -118,7 +141,10 @@ serve(async (req) => {
   }
 
   try {
-    const { fixtures } = (await req.json()) as { fixtures: Fixture[] };
+    const { fixtures, runEnsemble: withEnsemble } = (await req.json()) as {
+      fixtures: Fixture[];
+      runEnsemble?: boolean;
+    };
     if (!Array.isArray(fixtures) || fixtures.length === 0) {
       return new Response(JSON.stringify({ error: "fixtures[] required" }), {
         status: 400,
@@ -157,6 +183,29 @@ serve(async (req) => {
       const b = checkBannedPhrases(outputSample);
       const kw = checkKeywordCoverage(outputSample, expected, 0.3);
 
+      // 3-model median ensemble for interview features (opt-in — it costs AI calls).
+      let ensemble: FixtureResult["ensemble"];
+      if (withEnsemble && f.interviewQuestion && f.interviewAnswer && f.truth.answerScoreBand) {
+        try {
+          const { output, meta } = await scoreAnswerEnsemble({
+            cv: f.cv,
+            jd: f.jd,
+            role: f.truth.roleName,
+            question: f.interviewQuestion,
+            answer: f.interviewAnswer,
+            rubric: f.interviewRubric,
+          });
+          const [alo, ahi] = f.truth.answerScoreBand;
+          ensemble = {
+            meta,
+            band: f.truth.answerScoreBand,
+            inBand: output.score >= alo && output.score <= ahi,
+          };
+        } catch (err) {
+          console.error(`ensemble failed for ${f.id}:`, err);
+        }
+      }
+
       results.push({
         id: f.id,
         label: f.label,
@@ -175,6 +224,7 @@ serve(async (req) => {
           passed: b.ok,
           hits: b.ok ? [] : b.issues,
         },
+        ...(ensemble ? { ensemble } : {}),
       });
     }
 

@@ -2,11 +2,12 @@
 // Used by every accuracy-critical edge function.
 
 export type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
-export type PipelineModel = "flash" | "pro";
+export type PipelineModel = "flash" | "pro" | "lite";
 
 const MODEL_MAP: Record<PipelineModel, string> = {
   flash: "google/gemini-2.5-flash",
   pro: "google/gemini-2.5-pro",
+  lite: "google/gemini-2.5-flash-lite",
 };
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";

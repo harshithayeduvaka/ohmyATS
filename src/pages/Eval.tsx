@@ -15,6 +15,9 @@ interface Accuracy {
   keywordRecall: number;
   groundingPassRate: number;
   bannedPhraseRate: number;
+  ensembleCount?: number;
+  ensembleInBandRate?: number;
+  ensembleConsistency?: number;
   overall: number;
 }
 
@@ -31,6 +34,11 @@ interface EvalReport {
     keywordExtraction: { predicted: string[]; expected: string[]; precision: number; recall: number; f1: number };
     grounding: { passed: boolean; issues: string[] };
     bannedPhrases: { passed: boolean; hits: string[] };
+    ensemble?: {
+      meta: { models: string[]; scores: number[]; median: number; spread: number; agreement: number; consistent: boolean };
+      band: [number, number];
+      inBand: boolean;
+    };
   }>;
 }
 
@@ -40,12 +48,13 @@ const Eval = () => {
   const { toast } = useToast();
   const [running, setRunning] = useState(false);
   const [report, setReport] = useState<EvalReport | null>(null);
+  const [withEnsemble, setWithEnsemble] = useState(true);
 
   const run = async () => {
     setRunning(true);
     try {
       const { data, error } = await supabase.functions.invoke("run-eval", {
-        body: { fixtures: EVAL_FIXTURES },
+        body: { fixtures: EVAL_FIXTURES, runEnsemble: withEnsemble },
       });
       if (error) throw new Error(error.message);
       if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
@@ -88,9 +97,20 @@ const Eval = () => {
               </p>
             </div>
           </div>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                className="accent-primary"
+                checked={withEnsemble}
+                onChange={(e) => setWithEnsemble(e.target.checked)}
+              />
+              3-model ensemble
+            </label>
           <Button onClick={run} disabled={running} size="lg">
             {running ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Running…</> : <><Play className="w-4 h-4 mr-2" /> Run eval</>}
           </Button>
+          </div>
         </header>
 
         {!report && !running && (
@@ -110,6 +130,13 @@ const Eval = () => {
               <Metric label="ATS in-band" value={`${(report.accuracy.atsInBandRate * 100).toFixed(0)}%`} sub={`MAE ${report.accuracy.atsMae}`} />
               <Metric label="Keyword F1" value={report.accuracy.keywordF1.toFixed(2)} sub={`P ${report.accuracy.keywordPrecision.toFixed(2)} · R ${report.accuracy.keywordRecall.toFixed(2)}`} />
               <Metric label="Grounding pass" value={`${(report.accuracy.groundingPassRate * 100).toFixed(0)}%`} sub={`Banned: ${(report.accuracy.bannedPhraseRate * 100).toFixed(0)}%`} />
+              {(report.accuracy.ensembleCount ?? 0) > 0 && (
+                <Metric
+                  label="Ensemble in-band"
+                  value={`${((report.accuracy.ensembleInBandRate ?? 0) * 100).toFixed(0)}%`}
+                  sub={`Consistency ${((report.accuracy.ensembleConsistency ?? 0) * 100).toFixed(0)}% · ${report.accuracy.ensembleCount} scored`}
+                />
+              )}
             </div>
 
             {report.byFeature && report.byFeature.length > 0 && (
@@ -124,6 +151,7 @@ const Eval = () => {
                       <th className="py-1 pr-3 font-medium">ATS in-band</th>
                       <th className="py-1 pr-3 font-medium">KW F1</th>
                       <th className="py-1 pr-3 font-medium">Grounding</th>
+                      <th className="py-1 pr-3 font-medium">Ensemble</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -142,6 +170,11 @@ const Eval = () => {
                           <td className="py-2 pr-3 font-mono-tech">{(row.accuracy.atsInBandRate * 100).toFixed(0)}%</td>
                           <td className="py-2 pr-3 font-mono-tech">{row.accuracy.keywordF1.toFixed(2)}</td>
                           <td className="py-2 pr-3 font-mono-tech">{(row.accuracy.groundingPassRate * 100).toFixed(0)}%</td>
+                          <td className="py-2 pr-3 font-mono-tech text-muted-foreground">
+                            {(row.accuracy.ensembleCount ?? 0) > 0
+                              ? `${((row.accuracy.ensembleInBandRate ?? 0) * 100).toFixed(0)}% / ${((row.accuracy.ensembleConsistency ?? 0) * 100).toFixed(0)}%`
+                              : "—"}
+                          </td>
                         </tr>
                       ))}
                   </tbody>
@@ -168,6 +201,13 @@ const Eval = () => {
                         <Badge label="KW F1" ok={f.keywordExtraction.f1 >= 0.7} detail={f.keywordExtraction.f1.toFixed(2)} />
                         <Badge label="Ground" ok={f.grounding.passed} />
                         <Badge label="Banned" ok={f.bannedPhrases.passed} />
+                        {f.ensemble && (
+                          <Badge
+                            label="Ensemble"
+                            ok={f.ensemble.inBand && f.ensemble.meta.consistent}
+                            detail={`${f.ensemble.meta.median} vs ${f.ensemble.band[0]}-${f.ensemble.band[1]} · [${f.ensemble.meta.scores.join(", ")}] spread ${f.ensemble.meta.spread}`}
+                          />
+                        )}
                       </div>
                     </div>
                     {(f.grounding.issues.length > 0 || f.bannedPhrases.hits.length > 0) && (
