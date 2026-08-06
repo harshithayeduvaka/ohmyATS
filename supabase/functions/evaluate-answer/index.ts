@@ -52,79 +52,27 @@ serve(async (req) => {
       );
     }
 
-    const lang = language === "french" ? "French" : "English";
-    const langInstruction = language === "french"
-      ? `\n\nIMPORTANT: Write ALL output (verdict, strengths, weaknesses, idealAnswer, tips, rubricHits, rubricMisses) in French.`
-      : "";
-
-    const rubricArr: string[] = Array.isArray(rubric) ? rubric.filter((r) => typeof r === "string") : [];
-    const rubricBlock = rubricArr.length > 0
-      ? `\n\nSCORING RUBRIC (score against each criterion — an answer only scores 8+ if it hits most of these):\n${rubricArr.map((r, i) => `${i + 1}. ${r}`).join("\n")}\n\nIn "rubricHits" list criteria the answer clearly meets. In "rubricMisses" list criteria it fails or partially meets. The score MUST reflect the ratio of hits to total criteria: <40% hits => 3-4, 40-60% => 5-6, 60-80% => 7, 80-100% with specifics => 8-9, only near-perfect with quantified outcomes => 10.`
-      : `\n\nNo rubric provided — score harshly. Only structured, specific, quantified answers score 8+. Most answers are 4-6/10.`;
-
-    const systemPrompt = `You are a brutally honest senior hiring manager evaluating an interview answer.
-
-Respond with ONLY valid JSON:
-{
-  "score": 0-10,
-  "verdict": "one-line verdict",
-  "strengths": ["what was good"],
-  "weaknesses": ["what was missing or weak"],
-  "idealAnswer": "STAR-format ideal answer with specifics",
-  "tips": ["actionable improvement tips"],
-  "rubricHits": ["criteria met"],
-  "rubricMisses": ["criteria missed"]
-}${rubricBlock}${langInstruction}`;
-
-    const userContent = `Role: ${role || "General"}\n${jd ? `JD: ${jd}\n` : ""}${cv ? `CV: ${cv}\n` : ""}\nQuestion: ${question}\nCandidate's Answer: ${answer}\n\nOutput Language: ${lang}`;
-
-    // Ensemble: two models score in parallel, reconcile by averaging score and
-    // taking the pro model's qualitative fields (more reliable narrative).
-    const { output, agreement } = await runEnsemble<EvalOut>({
-      systemPrompt,
-      userPrompt: userContent,
-      models: ["pro", "flash"],
-      parse: (raw) => {
-        const p = tryParseJson<EvalOut>(raw);
-        if (!p || typeof p.score !== "number") return null;
-        return p;
-      },
-      reconcile: (results) => {
-        // Score: average, clamped to 0-10 and rounded to 1 decimal.
-        const scores = results.map((r) => Math.max(0, Math.min(10, r.score)));
-        const avgScore = Math.round(mean(scores) * 10) / 10;
-        // Prefer the first result (pro model) for narrative fields.
-        const primary = results[0];
-        // Union strengths/weaknesses/tips/rubric across members.
-        const unionUnique = (key: keyof EvalOut): string[] => {
-          const set = new Map<string, string>();
-          for (const r of results) {
-            const arr = (r[key] as string[]) ?? [];
-            for (const s of arr) {
-              const k = s.toLowerCase().trim();
-              if (k && !set.has(k)) set.set(k, s);
-            }
-          }
-          return [...set.values()];
-        };
-        return {
-          score: avgScore,
-          verdict: primary.verdict,
-          strengths: unionUnique("strengths").slice(0, 6),
-          weaknesses: unionUnique("weaknesses").slice(0, 6),
-          idealAnswer: primary.idealAnswer,
-          tips: unionUnique("tips").slice(0, 6),
-          rubricHits: unionUnique("rubricHits").slice(0, 10),
-          rubricMisses: unionUnique("rubricMisses").slice(0, 10),
-        };
-      },
-      jsonMode: true,
-      temperature: 0.2,
+    // 3-model median ensemble (pro + flash + lite): median score is robust to a
+    // single outlier model, qualitative fields come from majority vote.
+    const { output, meta } = await scoreAnswerEnsemble({
+      cv,
+      jd,
+      role,
+      question,
+      answer,
+      rubric,
+      language,
     });
 
-    return new Response(JSON.stringify({ ...output, _ensembleAgreement: agreement }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        ...output,
+        _ensembleAgreement: meta.agreement,
+        _ensemble: meta,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+
   } catch (e) {
     if (e instanceof DOMException && e.name === "AbortError") {
       return new Response(JSON.stringify({ error: "Request timed out." }), { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } });
